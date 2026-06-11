@@ -14,9 +14,48 @@ const skinTypeText = document.getElementById("skinType");
 const skin3dCanvas = document.getElementById("skin3dCanvas");
 const viewerStatus = document.getElementById("viewerStatus");
 
+const toggleRotationBtn = document.getElementById("toggleRotationBtn");
+const toggleAnimationBtn = document.getElementById("toggleAnimationBtn");
+const animationSpeedSlider = document.getElementById("animationSpeed");
+const speedValue = document.getElementById("speedValue");
+
 let skinViewer = null;
 
 setupSkinViewer();
+
+toggleRotationBtn.addEventListener("click", function () {
+    if (!skinViewer) return;
+
+    skinViewer.autoRotate = !skinViewer.autoRotate;
+
+    if (skinViewer.autoRotate) {
+        toggleRotationBtn.textContent = "Pause Rotation";
+    } else {
+        toggleRotationBtn.textContent = "Resume Rotation";
+    }
+});
+
+toggleAnimationBtn.addEventListener("click", function () {
+    if (!skinViewer || !skinViewer.animation) return;
+
+    skinViewer.animation.paused = !skinViewer.animation.paused;
+
+    if (skinViewer.animation.paused) {
+        toggleAnimationBtn.textContent = "Resume Walk";
+    } else {
+        toggleAnimationBtn.textContent = "Pause Walk";
+    }
+});
+
+animationSpeedSlider.addEventListener("input", function () {
+    const speed = Number(animationSpeedSlider.value);
+
+    speedValue.textContent = speed.toFixed(1);
+
+    if (!skinViewer || !skinViewer.animation) return;
+
+    skinViewer.animation.speed = speed;
+});
 
 upload.addEventListener("change", function () {
     const file = this.files[0];

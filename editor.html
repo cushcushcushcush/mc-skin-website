@@ -63,7 +63,19 @@
                 </div>
 
                 <p id="viewerStatus">Waiting for a valid skin.</p>
-                <p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
+
+<div class="viewer-controls">
+    <button type="button" id="toggleRotationBtn" class="secondary-button">Pause Rotation</button>
+    <button type="button" id="toggleAnimationBtn" class="secondary-button">Pause Walk</button>
+</div>
+
+<label class="slider-control" for="animationSpeed">
+    Walk Speed:
+    <input type="range" id="animationSpeed" min="0" max="3" step="0.1" value="0.7">
+    <span id="speedValue">0.7</span>
+</label>
+
+<p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
             </div>
         </section>
     </main>

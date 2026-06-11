@@ -270,3 +270,43 @@ nav a:hover {
     color: #777;
     font-size: 0.9rem;
 }
+
+.viewer-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    margin-bottom: 15px;
+}
+
+.secondary-button {
+    padding: 10px 14px;
+
+    background: #2a2a2a;
+    color: white;
+
+    border: 1px solid #444;
+    border-radius: 10px;
+
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.secondary-button:hover {
+    border-color: #7CFF9B;
+    color: #7CFF9B;
+}
+
+.slider-control {
+    display: block;
+
+    margin-bottom: 12px;
+
+    color: #d0d0d0;
+    font-size: 0.95rem;
+}
+
+.slider-control input {
+    width: 160px;
+    margin: 0 8px;
+}
