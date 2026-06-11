@@ -11,6 +11,7 @@
 
     <header>
         <h1>MC Skin Workshop</h1>
+
         <nav>
             <a href="#">Home</a>
             <a href="#">Editor</a>
@@ -24,19 +25,13 @@
             <h2>Create, Edit & Share Minecraft Skins</h2>
             <p>The all-in-one Minecraft skin platform.</p>
 
-            <button>Launch Editor</button>
+            <input type="file" id="skinUpload" accept="image/png">
+            <p id="uploadStatus">No skin loaded yet.</p>
+
+            <img id="skinPreview" alt="Skin Preview">
         </section>
-   <main>
-    <section class="hero">
-        <h2>Create, Edit & Share Minecraft Skins</h2>
-        <p>The all-in-one Minecraft skin platform.</p>
+    </main>
 
-<input type="file" id="skinUpload" accept="image/png">
-<p id="uploadStatus"></p>
-
-<img id="skinPreview" alt="Skin Preview">
-    </section>
-</main>
     <script src="script.js"></script>
 
 </body>

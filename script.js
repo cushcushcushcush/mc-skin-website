@@ -1,3 +1,5 @@
+console.log("Skin validation script loaded");
+
 const upload = document.getElementById("skinUpload");
 const preview = document.getElementById("skinPreview");
 const statusText = document.getElementById("uploadStatus");
@@ -5,10 +7,25 @@ const statusText = document.getElementById("uploadStatus");
 upload.addEventListener("change", function () {
     const file = this.files[0];
 
-    if (!file) return;
+    preview.src = "";
+    preview.style.display = "none";
 
-    if (file.type !== "image/png") {
-        showError("Please upload a PNG file.");
+    if (!file) {
+        showError("No file selected.");
+        return;
+    }
+
+    console.log("Uploaded file:", file.name, file.type);
+
+    const fileName = file.name.toLowerCase();
+
+    if (!fileName.endsWith(".png")) {
+        showError("Invalid file type. Minecraft skins must be PNG files.");
+        return;
+    }
+
+    if (file.type && file.type !== "image/png") {
+        showError("Invalid file type. Please upload a real PNG image.");
         return;
     }
 
@@ -20,6 +37,8 @@ upload.addEventListener("change", function () {
         image.onload = function () {
             const width = image.width;
             const height = image.height;
+
+            console.log("Image size:", width, height);
 
             const isModernSkin = width === 64 && height === 64;
             const isLegacySkin = width === 64 && height === 32;
@@ -52,9 +71,6 @@ upload.addEventListener("change", function () {
 function showError(message) {
     statusText.textContent = message;
     statusText.className = "error";
-
-    preview.src = "";
-    preview.style.display = "none";
 }
 
 function showSuccess(message) {
