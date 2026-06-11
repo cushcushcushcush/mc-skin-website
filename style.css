@@ -527,3 +527,9 @@ nav a:hover {
     width: 100%;
     text-align: center;
 }
+
+.prefs-note {
+    color: #777;
+    font-size: 0.85rem;
+    margin-top: 8px;
+}

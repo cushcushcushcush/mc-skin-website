@@ -1,6 +1,6 @@
 import * as skinview3d from "https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/+esm";
 
-console.log("Skin validation, model drawer and 3D viewer script loaded");
+console.log("Skin validation, saved preferences, model drawer and 3D viewer script loaded");
 
 const upload = document.getElementById("skinUpload");
 const preview = document.getElementById("skinPreview");
@@ -17,8 +17,10 @@ const viewerStatus = document.getElementById("viewerStatus");
 
 const toggleRotationBtn = document.getElementById("toggleRotationBtn");
 const toggleAnimationBtn = document.getElementById("toggleAnimationBtn");
+const resetPreferencesBtn = document.getElementById("resetPreferencesBtn");
 const animationSpeedSlider = document.getElementById("animationSpeed");
 const speedValue = document.getElementById("speedValue");
+const prefsStatus = document.getElementById("prefsStatus");
 
 const drawerOverlay = document.getElementById("drawerOverlay");
 const modelDrawer = document.getElementById("modelDrawer");
@@ -27,13 +29,24 @@ const applyModelBtn = document.getElementById("applyModelBtn");
 const modelChoiceSummary = document.getElementById("modelChoiceSummary");
 const modelOptionButtons = document.querySelectorAll("[data-model-choice]");
 
+const preferencesKey = "mcSkinWorkshopViewerPreferences";
+
+const defaultPreferences = {
+    modelChoice: "auto-detect",
+    autoRotate: true,
+    walkPaused: false,
+    walkSpeed: 0.7
+};
+
+let viewerPreferences = loadViewerPreferences();
 let skinViewer = null;
 let pendingSkinDataUrl = null;
-let pendingModelChoice = "auto-detect";
+let pendingModelChoice = viewerPreferences.modelChoice;
 
 setupSkinViewer();
 setupViewerControls();
 setupModelDrawer();
+applyPreferencesToInterface();
 
 upload.addEventListener("change", function () {
     const file = this.files[0];
@@ -102,7 +115,7 @@ upload.addEventListener("change", function () {
             }
 
             pendingSkinDataUrl = event.target.result;
-            selectModelChoice("auto-detect");
+            selectModelChoice(viewerPreferences.modelChoice);
             modelChoiceText.textContent = "Waiting for choice";
 
             updateViewerStatus("Choose a model type to update the 3D viewer.", true);
@@ -132,16 +145,16 @@ function setupSkinViewer() {
         skinViewer.background = 0x151515;
         skinViewer.fov = 50;
         skinViewer.zoom = 0.85;
-        skinViewer.autoRotate = true;
 
         skinViewer.animation = new skinview3d.WalkingAnimation();
-        skinViewer.animation.speed = 0.7;
 
         if (skinViewer.controls) {
             skinViewer.controls.enableRotate = true;
             skinViewer.controls.enableZoom = true;
             skinViewer.controls.enablePan = false;
         }
+
+        applyPreferencesToViewer();
 
         updateViewerStatus("3D viewer ready. Upload a skin to begin.", true);
     } catch (error) {
@@ -154,35 +167,47 @@ function setupViewerControls() {
     toggleRotationBtn.addEventListener("click", function () {
         if (!skinViewer) return;
 
-        skinViewer.autoRotate = !skinViewer.autoRotate;
+        viewerPreferences.autoRotate = !viewerPreferences.autoRotate;
+        saveViewerPreferences();
 
-        if (skinViewer.autoRotate) {
-            toggleRotationBtn.textContent = "Pause Rotation";
-        } else {
-            toggleRotationBtn.textContent = "Resume Rotation";
-        }
+        applyPreferencesToViewer();
+        applyPreferencesToInterface();
+        showPreferencesSavedMessage();
     });
 
     toggleAnimationBtn.addEventListener("click", function () {
         if (!skinViewer || !skinViewer.animation) return;
 
-        skinViewer.animation.paused = !skinViewer.animation.paused;
+        viewerPreferences.walkPaused = !viewerPreferences.walkPaused;
+        saveViewerPreferences();
 
-        if (skinViewer.animation.paused) {
-            toggleAnimationBtn.textContent = "Resume Walk";
-        } else {
-            toggleAnimationBtn.textContent = "Pause Walk";
-        }
+        applyPreferencesToViewer();
+        applyPreferencesToInterface();
+        showPreferencesSavedMessage();
     });
 
     animationSpeedSlider.addEventListener("input", function () {
         const speed = Number(animationSpeedSlider.value);
 
-        speedValue.textContent = speed.toFixed(1);
+        viewerPreferences.walkSpeed = speed;
+        saveViewerPreferences();
 
-        if (!skinViewer || !skinViewer.animation) return;
+        applyPreferencesToViewer();
+        applyPreferencesToInterface();
+        showPreferencesSavedMessage();
+    });
 
-        skinViewer.animation.speed = speed;
+    resetPreferencesBtn.addEventListener("click", function () {
+        viewerPreferences = structuredClone(defaultPreferences);
+        pendingModelChoice = viewerPreferences.modelChoice;
+
+        saveViewerPreferences();
+
+        applyPreferencesToViewer();
+        applyPreferencesToInterface();
+        selectModelChoice(viewerPreferences.modelChoice);
+
+        showPreferencesSavedMessage("Preferences reset to defaults.");
     });
 }
 
@@ -200,6 +225,9 @@ function setupModelDrawer() {
             return;
         }
 
+        viewerPreferences.modelChoice = pendingModelChoice;
+        saveViewerPreferences();
+
         applyModelBtn.disabled = true;
         applyModelBtn.textContent = "Applying...";
 
@@ -209,6 +237,8 @@ function setupModelDrawer() {
         applyModelBtn.textContent = "Apply Model";
 
         closeModelDrawer();
+        applyPreferencesToInterface();
+        showPreferencesSavedMessage();
     });
 
     closeDrawerBtn.addEventListener("click", closeModelDrawer);
@@ -240,8 +270,7 @@ async function loadSkinInto3DViewer(skinDataUrl, modelChoice) {
             model: modelChoice
         });
 
-        skinViewer.autoRotate = true;
-        toggleRotationBtn.textContent = "Pause Rotation";
+        applyPreferencesToViewer();
 
         const detectedModel = getActiveViewerModel();
 
@@ -257,6 +286,67 @@ async function loadSkinInto3DViewer(skinDataUrl, modelChoice) {
         console.error("Could not load skin into 3D viewer:", error);
         updateViewerStatus("Could not load this skin into the 3D viewer.", false);
     }
+}
+
+function applyPreferencesToViewer() {
+    if (!skinViewer) return;
+
+    skinViewer.autoRotate = viewerPreferences.autoRotate;
+
+    if (skinViewer.animation) {
+        skinViewer.animation.paused = viewerPreferences.walkPaused;
+        skinViewer.animation.speed = viewerPreferences.walkSpeed;
+    }
+}
+
+function applyPreferencesToInterface() {
+    toggleRotationBtn.textContent = viewerPreferences.autoRotate ? "Pause Rotation" : "Resume Rotation";
+    toggleAnimationBtn.textContent = viewerPreferences.walkPaused ? "Resume Walk" : "Pause Walk";
+
+    animationSpeedSlider.value = viewerPreferences.walkSpeed;
+    speedValue.textContent = Number(viewerPreferences.walkSpeed).toFixed(1);
+
+    selectModelChoice(viewerPreferences.modelChoice);
+}
+
+function loadViewerPreferences() {
+    try {
+        const savedPreferences = localStorage.getItem(preferencesKey);
+
+        if (!savedPreferences) {
+            return structuredClone(defaultPreferences);
+        }
+
+        const parsedPreferences = JSON.parse(savedPreferences);
+
+        return {
+            ...defaultPreferences,
+            ...parsedPreferences
+        };
+    } catch (error) {
+        console.warn("Could not load viewer preferences:", error);
+        return structuredClone(defaultPreferences);
+    }
+}
+
+function saveViewerPreferences() {
+    try {
+        localStorage.setItem(preferencesKey, JSON.stringify(viewerPreferences));
+    } catch (error) {
+        console.warn("Could not save viewer preferences:", error);
+    }
+}
+
+function showPreferencesSavedMessage(customMessage = "Viewer preferences saved on this browser.") {
+    if (!prefsStatus) return;
+
+    prefsStatus.textContent = customMessage;
+
+    window.clearTimeout(showPreferencesSavedMessage.timeoutId);
+
+    showPreferencesSavedMessage.timeoutId = window.setTimeout(function () {
+        prefsStatus.textContent = "Viewer preferences save automatically on this browser.";
+    }, 1800);
 }
 
 function getActiveViewerModel() {
