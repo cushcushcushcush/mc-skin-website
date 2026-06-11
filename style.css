@@ -18,6 +18,11 @@ header {
     padding: 20px 40px;
 
     background: #1e1e1e;
+    border-bottom: 1px solid #2f2f2f;
+}
+
+header h1 {
+    font-size: 1.4rem;
 }
 
 nav a {
@@ -27,10 +32,15 @@ nav a {
     margin-left: 20px;
 }
 
+nav a:hover {
+    color: #7CFF9B;
+}
+
 .hero {
     text-align: center;
 
-    margin-top: 120px;
+    margin-top: 80px;
+    margin-bottom: 40px;
 }
 
 .hero h2 {
@@ -40,29 +50,60 @@ nav a {
 
 .hero p {
     color: #bdbdbd;
-    margin-bottom: 25px;
 }
 
-button {
-    padding: 12px 25px;
+.tool-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
 
-    border: none;
-    border-radius: 8px;
+    width: min(1000px, 90%);
+    margin: 0 auto 80px auto;
+}
+
+.upload-card,
+.preview-card {
+    background: #1e1e1e;
+
+    border: 1px solid #333;
+    border-radius: 16px;
+
+    padding: 25px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.upload-card h3,
+.preview-card h3 {
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+}
+
+.card-description {
+    color: #bdbdbd;
+    margin-bottom: 20px;
+}
+
+#skinUpload {
+    display: none;
+}
+
+.upload-button {
+    display: inline-block;
+
+    padding: 12px 20px;
+
+    background: #7CFF9B;
+    color: #101010;
+
+    border-radius: 10px;
 
     cursor: pointer;
-    font-size: 1rem;
+    font-weight: bold;
 }
 
-#skinPreview {
-    margin-top: 20px;
-
-    width: 256px;
-    image-rendering: pixelated;
-
-    display: none;
-
-    border: 2px solid #333;
-    border-radius: 8px;
+.upload-button:hover {
+    filter: brightness(0.9);
 }
 
 #uploadStatus {
@@ -76,4 +117,75 @@ button {
 
 .error {
     color: #FF7676;
+}
+
+.preview-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 300px;
+
+    background: #151515;
+
+    border: 1px dashed #444;
+    border-radius: 12px;
+
+    margin-top: 15px;
+    margin-bottom: 20px;
+
+    padding: 20px;
+}
+
+#skinPreview {
+    width: 256px;
+
+    image-rendering: pixelated;
+
+    display: none;
+}
+
+#emptyPreviewText {
+    color: #777;
+    text-align: center;
+}
+
+.skin-info {
+    background: #151515;
+
+    border-radius: 12px;
+
+    padding: 15px;
+}
+
+.skin-info p {
+    margin-bottom: 8px;
+    color: #d0d0d0;
+}
+
+.skin-info p:last-child {
+    margin-bottom: 0;
+}
+
+.skin-info strong {
+    color: white;
+}
+
+@media (max-width: 800px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    nav a {
+        margin: 0 10px;
+    }
+
+    .hero h2 {
+        font-size: 2rem;
+    }
+
+    .tool-panel {
+        grid-template-columns: 1fr;
+    }
 }

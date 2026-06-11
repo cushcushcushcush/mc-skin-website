@@ -3,12 +3,16 @@ console.log("Skin validation script loaded");
 const upload = document.getElementById("skinUpload");
 const preview = document.getElementById("skinPreview");
 const statusText = document.getElementById("uploadStatus");
+const emptyPreviewText = document.getElementById("emptyPreviewText");
+
+const fileNameText = document.getElementById("fileName");
+const fileDimensionsText = document.getElementById("fileDimensions");
+const skinTypeText = document.getElementById("skinType");
 
 upload.addEventListener("change", function () {
     const file = this.files[0];
 
-    preview.src = "";
-    preview.style.display = "none";
+    resetPreview();
 
     if (!file) {
         showError("No file selected.");
@@ -21,11 +25,13 @@ upload.addEventListener("change", function () {
 
     if (!fileName.endsWith(".png")) {
         showError("Invalid file type. Minecraft skins must be PNG files.");
+        fileNameText.textContent = file.name;
         return;
     }
 
     if (file.type && file.type !== "image/png") {
         showError("Invalid file type. Please upload a real PNG image.");
+        fileNameText.textContent = file.name;
         return;
     }
 
@@ -43,23 +49,31 @@ upload.addEventListener("change", function () {
             const isModernSkin = width === 64 && height === 64;
             const isLegacySkin = width === 64 && height === 32;
 
+            fileNameText.textContent = file.name;
+            fileDimensionsText.textContent = `${width}x${height}`;
+
             if (!isModernSkin && !isLegacySkin) {
                 showError(`Invalid skin size: ${width}x${height}. Please upload a 64x64 or 64x32 Minecraft skin.`);
+                skinTypeText.textContent = "Invalid";
                 return;
             }
 
             preview.src = event.target.result;
             preview.style.display = "block";
+            emptyPreviewText.style.display = "none";
 
             if (isModernSkin) {
+                skinTypeText.textContent = "Modern 64x64";
                 showSuccess("Valid 64x64 Minecraft skin loaded.");
             } else {
+                skinTypeText.textContent = "Legacy 64x32";
                 showSuccess("Valid legacy 64x32 Minecraft skin loaded.");
             }
         };
 
         image.onerror = function () {
             showError("This file could not be read as an image.");
+            fileNameText.textContent = file.name;
         };
 
         image.src = event.target.result;
@@ -67,6 +81,17 @@ upload.addEventListener("change", function () {
 
     reader.readAsDataURL(file);
 });
+
+function resetPreview() {
+    preview.src = "";
+    preview.style.display = "none";
+
+    emptyPreviewText.style.display = "block";
+
+    fileNameText.textContent = "None";
+    fileDimensionsText.textContent = "None";
+    skinTypeText.textContent = "None";
+}
 
 function showError(message) {
     statusText.textContent = message;
