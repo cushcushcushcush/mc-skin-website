@@ -23,7 +23,7 @@
     <main>
         <section class="hero compact-hero">
             <h2>Skin Editor</h2>
-            <p>Upload a Minecraft skin PNG to preview and inspect it.</p>
+            <p>Upload a Minecraft skin PNG to preview, inspect and view it in 3D.</p>
         </section>
 
         <section class="tool-panel">
@@ -41,7 +41,7 @@
             </div>
 
             <div class="preview-card">
-                <h3>Skin Preview</h3>
+                <h3>Flat Skin Preview</h3>
 
                 <div class="preview-box">
                     <img id="skinPreview" alt="Skin Preview">
@@ -54,10 +54,21 @@
                     <p><strong>Skin Type:</strong> <span id="skinType">None</span></p>
                 </div>
             </div>
+
+            <div class="viewer-card">
+                <h3>3D Skin Viewer</h3>
+
+                <div class="viewer-box">
+                    <canvas id="skin3dCanvas"></canvas>
+                </div>
+
+                <p id="viewerStatus">Waiting for a valid skin.</p>
+                <p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
+            </div>
         </section>
     </main>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 
 </body>
 </html>

@@ -92,7 +92,8 @@ nav a:hover {
 .feature-card,
 .page-card,
 .upload-card,
-.preview-card {
+.preview-card,
+.viewer-card {
     background: #1e1e1e;
 
     border: 1px solid #333;
@@ -133,10 +134,10 @@ nav a:hover {
 
 .tool-panel {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 25px;
 
-    width: min(1000px, 90%);
+    width: min(1200px, 94%);
     margin: 0 auto 80px auto;
 }
 
@@ -233,4 +234,39 @@ nav a:hover {
     .page-card h2 {
         font-size: 2rem;
     }
+}
+
+.viewer-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 420px;
+
+    background: #151515;
+
+    border: 1px dashed #444;
+    border-radius: 12px;
+
+    margin-top: 15px;
+    margin-bottom: 15px;
+
+    padding: 10px;
+}
+
+#skin3dCanvas {
+    width: 300px;
+    height: 400px;
+
+    display: block;
+}
+
+#viewerStatus {
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.viewer-note {
+    color: #777;
+    font-size: 0.9rem;
 }

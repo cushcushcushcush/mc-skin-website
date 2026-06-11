@@ -1,4 +1,6 @@
-console.log("Skin validation script loaded");
+import * as skinview3d from "https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/+esm";
+
+console.log("Skin validation and 3D viewer script loaded");
 
 const upload = document.getElementById("skinUpload");
 const preview = document.getElementById("skinPreview");
@@ -9,6 +11,13 @@ const fileNameText = document.getElementById("fileName");
 const fileDimensionsText = document.getElementById("fileDimensions");
 const skinTypeText = document.getElementById("skinType");
 
+const skin3dCanvas = document.getElementById("skin3dCanvas");
+const viewerStatus = document.getElementById("viewerStatus");
+
+let skinViewer = null;
+
+setupSkinViewer();
+
 upload.addEventListener("change", function () {
     const file = this.files[0];
 
@@ -16,6 +25,7 @@ upload.addEventListener("change", function () {
 
     if (!file) {
         showError("No file selected.");
+        updateViewerStatus("Waiting for a valid skin.", false);
         return;
     }
 
@@ -26,12 +36,14 @@ upload.addEventListener("change", function () {
     if (!fileName.endsWith(".png")) {
         showError("Invalid file type. Minecraft skins must be PNG files.");
         fileNameText.textContent = file.name;
+        updateViewerStatus("3D viewer needs a valid PNG skin.", false);
         return;
     }
 
     if (file.type && file.type !== "image/png") {
         showError("Invalid file type. Please upload a real PNG image.");
         fileNameText.textContent = file.name;
+        updateViewerStatus("3D viewer needs a real PNG image.", false);
         return;
     }
 
@@ -55,6 +67,7 @@ upload.addEventListener("change", function () {
             if (!isModernSkin && !isLegacySkin) {
                 showError(`Invalid skin size: ${width}x${height}. Please upload a 64x64 or 64x32 Minecraft skin.`);
                 skinTypeText.textContent = "Invalid";
+                updateViewerStatus("3D viewer needs a valid Minecraft skin size.", false);
                 return;
             }
 
@@ -69,11 +82,14 @@ upload.addEventListener("change", function () {
                 skinTypeText.textContent = "Legacy 64x32";
                 showSuccess("Valid legacy 64x32 Minecraft skin loaded.");
             }
+
+            loadSkinInto3DViewer(event.target.result);
         };
 
         image.onerror = function () {
             showError("This file could not be read as an image.");
             fileNameText.textContent = file.name;
+            updateViewerStatus("This file could not be loaded into the 3D viewer.", false);
         };
 
         image.src = event.target.result;
@@ -81,6 +97,52 @@ upload.addEventListener("change", function () {
 
     reader.readAsDataURL(file);
 });
+
+function setupSkinViewer() {
+    try {
+        skinViewer = new skinview3d.SkinViewer({
+            canvas: skin3dCanvas,
+            width: 300,
+            height: 400
+        });
+
+        skinViewer.background = 0x151515;
+        skinViewer.fov = 50;
+        skinViewer.zoom = 0.85;
+        skinViewer.autoRotate = true;
+
+        skinViewer.animation = new skinview3d.WalkingAnimation();
+        skinViewer.animation.speed = 0.7;
+
+        if (skinViewer.controls) {
+            skinViewer.controls.enableRotate = true;
+            skinViewer.controls.enableZoom = true;
+            skinViewer.controls.enablePan = false;
+        }
+
+        updateViewerStatus("3D viewer ready. Upload a skin to begin.", true);
+    } catch (error) {
+        console.error("3D viewer failed to start:", error);
+        updateViewerStatus("3D viewer failed to start. Check the browser console.", false);
+    }
+}
+
+async function loadSkinInto3DViewer(skinDataUrl) {
+    if (!skinViewer) {
+        updateViewerStatus("3D viewer is not available.", false);
+        return;
+    }
+
+    try {
+        await skinViewer.loadSkin(skinDataUrl);
+        skinViewer.autoRotate = true;
+
+        updateViewerStatus("3D skin loaded successfully.", true);
+    } catch (error) {
+        console.error("Could not load skin into 3D viewer:", error);
+        updateViewerStatus("Could not load this skin into the 3D viewer.", false);
+    }
+}
 
 function resetPreview() {
     preview.src = "";
@@ -101,4 +163,9 @@ function showError(message) {
 function showSuccess(message) {
     statusText.textContent = message;
     statusText.className = "success";
+}
+
+function updateViewerStatus(message, isSuccess) {
+    viewerStatus.textContent = message;
+    viewerStatus.className = isSuccess ? "success" : "error";
 }
