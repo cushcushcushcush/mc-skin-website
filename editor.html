@@ -52,6 +52,7 @@
                     <p><strong>File:</strong> <span id="fileName">None</span></p>
                     <p><strong>Dimensions:</strong> <span id="fileDimensions">None</span></p>
                     <p><strong>Skin Type:</strong> <span id="skinType">None</span></p>
+                    <p><strong>Model:</strong> <span id="modelChoice">None</span></p>
                 </div>
             </div>
 
@@ -64,21 +65,59 @@
 
                 <p id="viewerStatus">Waiting for a valid skin.</p>
 
-<div class="viewer-controls">
-    <button type="button" id="toggleRotationBtn" class="secondary-button">Pause Rotation</button>
-    <button type="button" id="toggleAnimationBtn" class="secondary-button">Pause Walk</button>
-</div>
+                <div class="viewer-controls">
+                    <button type="button" id="toggleRotationBtn" class="secondary-button">Pause Rotation</button>
+                    <button type="button" id="toggleAnimationBtn" class="secondary-button">Pause Walk</button>
+                </div>
 
-<label class="slider-control" for="animationSpeed">
-    Walk Speed:
-    <input type="range" id="animationSpeed" min="0" max="3" step="0.1" value="0.7">
-    <span id="speedValue">0.7</span>
-</label>
+                <label class="slider-control" for="animationSpeed">
+                    Walk Speed:
+                    <input type="range" id="animationSpeed" min="0" max="3" step="0.1" value="0.7">
+                    <span id="speedValue">0.7</span>
+                </label>
 
-<p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
+                <p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
             </div>
         </section>
     </main>
+
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+
+    <aside id="modelDrawer" class="model-drawer">
+        <div class="drawer-header">
+            <div>
+                <h3>Choose Model Type</h3>
+                <p>Select how this skin should be displayed in 3D.</p>
+            </div>
+
+            <button type="button" id="closeDrawerBtn" class="drawer-close-button">×</button>
+        </div>
+
+        <div class="model-options">
+            <button type="button" class="model-option selected" data-model-choice="auto-detect">
+                <strong>Auto-detect</strong>
+                <span>Let the viewer decide between Classic and Slim.</span>
+            </button>
+
+            <button type="button" class="model-option" data-model-choice="default">
+                <strong>Classic</strong>
+                <span>Normal Minecraft arms, often called Steve/classic.</span>
+            </button>
+
+            <button type="button" class="model-option" data-model-choice="slim">
+                <strong>Slim</strong>
+                <span>Thinner arms, often called Alex/slim.</span>
+            </button>
+        </div>
+
+        <div class="drawer-summary">
+            Current choice: <strong id="modelChoiceSummary">Auto-detect</strong>
+        </div>
+
+        <button type="button" id="applyModelBtn" class="primary-button drawer-apply-button">
+            Apply Model
+        </button>
+    </aside>
 
     <script type="module" src="script.js"></script>
 
