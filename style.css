@@ -39,8 +39,12 @@ nav a:hover {
 .hero {
     text-align: center;
 
-    margin-top: 80px;
-    margin-bottom: 40px;
+    width: min(900px, 90%);
+    margin: 90px auto 45px auto;
+}
+
+.compact-hero {
+    margin-top: 60px;
 }
 
 .hero h2 {
@@ -50,44 +54,11 @@ nav a:hover {
 
 .hero p {
     color: #bdbdbd;
+    margin-bottom: 25px;
+    line-height: 1.6;
 }
 
-.tool-panel {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 25px;
-
-    width: min(1000px, 90%);
-    margin: 0 auto 80px auto;
-}
-
-.upload-card,
-.preview-card {
-    background: #1e1e1e;
-
-    border: 1px solid #333;
-    border-radius: 16px;
-
-    padding: 25px;
-
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-.upload-card h3,
-.preview-card h3 {
-    margin-bottom: 10px;
-    font-size: 1.4rem;
-}
-
-.card-description {
-    color: #bdbdbd;
-    margin-bottom: 20px;
-}
-
-#skinUpload {
-    display: none;
-}
-
+.primary-button,
 .upload-button {
     display: inline-block;
 
@@ -100,10 +71,77 @@ nav a:hover {
 
     cursor: pointer;
     font-weight: bold;
+    text-decoration: none;
+    border: none;
 }
 
+.primary-button:hover,
 .upload-button:hover {
     filter: brightness(0.9);
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+
+    width: min(1000px, 90%);
+    margin: 0 auto 80px auto;
+}
+
+.feature-card,
+.page-card,
+.upload-card,
+.preview-card {
+    background: #1e1e1e;
+
+    border: 1px solid #333;
+    border-radius: 16px;
+
+    padding: 25px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.feature-card h3,
+.upload-card h3,
+.preview-card h3 {
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+}
+
+.feature-card p,
+.page-card p,
+.card-description {
+    color: #bdbdbd;
+    line-height: 1.6;
+}
+
+.page-card {
+    width: min(850px, 90%);
+    margin: 80px auto;
+}
+
+.page-card h2 {
+    font-size: 2.4rem;
+    margin-bottom: 20px;
+}
+
+.page-card p {
+    margin-bottom: 16px;
+}
+
+.tool-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+
+    width: min(1000px, 90%);
+    margin: 0 auto 80px auto;
+}
+
+#skinUpload {
+    display: none;
 }
 
 #uploadStatus {
@@ -171,7 +209,14 @@ nav a:hover {
     color: white;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
+    .feature-grid,
+    .tool-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
     header {
         flex-direction: column;
         gap: 15px;
@@ -185,7 +230,7 @@ nav a:hover {
         font-size: 2rem;
     }
 
-    .tool-panel {
-        grid-template-columns: 1fr;
+    .page-card h2 {
+        font-size: 2rem;
     }
 }

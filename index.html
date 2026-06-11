@@ -13,51 +13,38 @@
         <h1>MC Skin Workshop</h1>
 
         <nav>
-            <a href="#">Home</a>
-            <a href="#">Editor</a>
-            <a href="#">Gallery</a>
-            <a href="#">About</a>
+            <a href="index.html">Home</a>
+            <a href="editor.html">Editor</a>
+            <a href="gallery.html">Gallery</a>
+            <a href="about.html">About</a>
         </nav>
     </header>
 
     <main>
         <section class="hero">
             <h2>Create, Edit & Share Minecraft Skins</h2>
-            <p>The all-in-one Minecraft skin platform.</p>
+            <p>A clean all-in-one workshop for Minecraft skin editing, previewing, recolouring and sharing.</p>
+
+            <a href="editor.html" class="primary-button">Launch Editor</a>
         </section>
 
-        <section class="tool-panel">
-            <div class="upload-card">
-                <h3>Upload Skin</h3>
-                <p class="card-description">Choose a Minecraft skin PNG to preview and inspect.</p>
-
-                <label for="skinUpload" class="upload-button">
-                    Choose Skin PNG
-                </label>
-
-                <input type="file" id="skinUpload" accept="image/png">
-
-                <p id="uploadStatus">No skin loaded yet.</p>
+        <section class="feature-grid">
+            <div class="feature-card">
+                <h3>Skin Editor</h3>
+                <p>Upload and preview Minecraft skins. Editing tools will be added step by step.</p>
             </div>
 
-            <div class="preview-card">
-                <h3>Skin Preview</h3>
+            <div class="feature-card">
+                <h3>Recolour Tools</h3>
+                <p>Future tools will help recolour outfits, hair, armour and accessories more easily.</p>
+            </div>
 
-                <div class="preview-box">
-                    <img id="skinPreview" alt="Skin Preview">
-                    <p id="emptyPreviewText">Your skin preview will appear here.</p>
-                </div>
-
-                <div class="skin-info">
-                    <p><strong>File:</strong> <span id="fileName">None</span></p>
-                    <p><strong>Dimensions:</strong> <span id="fileDimensions">None</span></p>
-                    <p><strong>Skin Type:</strong> <span id="skinType">None</span></p>
-                </div>
+            <div class="feature-card">
+                <h3>Skin Gallery</h3>
+                <p>A future place for users to upload, browse, save and share Minecraft skins.</p>
             </div>
         </section>
     </main>
-
-    <script src="script.js"></script>
 
 </body>
 </html>
