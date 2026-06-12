@@ -7,44 +7,140 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="home-page">
 
-    <header>
-        <h1>MC Skin Workshop</h1>
+    <header class="home-topbar">
+        <a href="index.html" class="logo-box">MC</a>
 
-        <nav>
-            <a href="index.html">Home</a>
+        <div class="site-name-box">
+            <strong>MC Skin Workshop</strong>
+            <span>Skins, tools, and tiny pixel wizardry</span>
+        </div>
+
+        <form class="search-form">
+            <input type="search" placeholder="Search names, UUIDs, servers or skins">
+            <button type="submit">Search</button>
+        </form>
+
+        <div class="top-actions">
             <a href="editor.html">Editor</a>
             <a href="gallery.html">Gallery</a>
             <a href="about.html">About</a>
-        </nav>
+            <button type="button" class="settings-button">Settings</button>
+            <div class="profile-box">Profile</div>
+        </div>
     </header>
 
-    <main>
-        <section class="hero">
-            <h2>Create, Edit & Share Minecraft Skins</h2>
-            <p>A clean all-in-one workshop for Minecraft skin editing, previewing, recolouring and sharing.</p>
+    <main class="homepage-layout">
+        <section class="gallery-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Minecraft Skins</h2>
+                    <p>Trending skins, new uploads and future community favourites.</p>
+                </div>
+
+                <select>
+                    <option>Trending</option>
+                    <option>Newest</option>
+                    <option>Popular</option>
+                </select>
+            </div>
+
+            <div class="skin-grid">
+                <article class="skin-card">
+                    <div class="skin-rank">#1</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>76 ★</span>
+                </article>
+
+                <article class="skin-card">
+                    <div class="skin-rank">#2</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>41 ★</span>
+                </article>
+
+                <article class="skin-card">
+                    <div class="skin-rank">#3</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>29 ★</span>
+                </article>
+
+                <article class="skin-card">
+                    <div class="skin-rank">#4</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>22 ★</span>
+                </article>
+
+                <article class="skin-card">
+                    <div class="skin-rank">#5</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>18 ★</span>
+                </article>
+
+                <article class="skin-card">
+                    <div class="skin-rank">#6</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>15 ★</span>
+                </article>
+
+                <article class="skin-card">
+                    <div class="skin-rank">#7</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>12 ★</span>
+                </article>
+
+                <article class="skin-card">
+                    <div class="skin-rank">#8</div>
+                    <div class="skin-thumb"></div>
+                    <p>Example Skin</p>
+                    <span>9 ★</span>
+                </article>
+            </div>
+
+            <a href="gallery.html" class="continue-button">Continue →</a>
+        </section>
+
+        <aside class="updates-panel">
+            <h2>Updates</h2>
+
+            <div class="updates-card">
+                <h3>Editor foundation is underway</h3>
+                <p>
+                    The editor currently supports skin upload, validation, flat preview,
+                    3D preview, model selection and viewer preferences.
+                </p>
+            </div>
+
+            <div class="updates-card">
+                <h3>Coming next</h3>
+                <p>
+                    Basic editing tools, layer controls, colour tools, recolouring,
+                    reshading and skin splicing are planned.
+                </p>
+            </div>
+        </aside>
+
+        <section class="welcome-panel">
+            <h2>Welcome to MC Skin Workshop</h2>
+            <p>
+                A clean Minecraft skin platform for editing, previewing, recolouring,
+                reshading, splicing and eventually sharing skins with the community.
+            </p>
 
             <a href="editor.html" class="primary-button">Launch Editor</a>
         </section>
-
-        <section class="feature-grid">
-            <div class="feature-card">
-                <h3>Skin Editor</h3>
-                <p>Upload and preview Minecraft skins. Editing tools will be added step by step.</p>
-            </div>
-
-            <div class="feature-card">
-                <h3>Recolour Tools</h3>
-                <p>Future tools will help recolour outfits, hair, armour and accessories more easily.</p>
-            </div>
-
-            <div class="feature-card">
-                <h3>Skin Gallery</h3>
-                <p>A future place for users to upload, browse, save and share Minecraft skins.</p>
-            </div>
-        </section>
     </main>
+
+    <footer class="home-footer">
+        <p>Contact · Privacy · Terms · Copyright · Cookies</p>
+    </footer>
 
 </body>
 </html>
