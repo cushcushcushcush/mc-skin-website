@@ -71,6 +71,20 @@
     <button type="button" id="resetPreferencesBtn" class="secondary-button">Reset Defaults</button>
 </div>
 
+<div class="canvas-card">
+    <h3>2D Skin Canvas</h3>
+    <p class="card-description">A flat pixel canvas for future editing tools.</p>
+
+    <div class="canvas-shell">
+        <canvas id="skinCanvas" width="64" height="64"></canvas>
+    </div>
+
+    <div class="canvas-info">
+        <p><strong>Status:</strong> <span id="skinCanvasStatus">Waiting for a valid skin.</span></p>
+        <p><strong>Pixel:</strong> <span id="pixelInfo">None selected</span></p>
+    </div>
+</div>
+
                 <label class="slider-control" for="animationSpeed">
                     Walk Speed:
                     <input type="range" id="animationSpeed" min="0" max="3" step="0.1" value="0.7">

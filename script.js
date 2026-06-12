@@ -31,6 +31,11 @@ const modelOptionButtons = document.querySelectorAll("[data-model-choice]");
 
 const toggleOuterLayerBtn = document.getElementById("toggleOuterLayerBtn");
 
+const skinCanvas = document.getElementById("skinCanvas");
+const skinCanvasStatus = document.getElementById("skinCanvasStatus");
+const pixelInfo = document.getElementById("pixelInfo");
+const skinCanvasContext = skinCanvas.getContext("2d", { willReadFrequently: true });
+
 const preferencesKey = "mcSkinWorkshopViewerPreferences";
 
 const defaultPreferences = {
@@ -50,6 +55,7 @@ setupSkinViewer();
 setupViewerControls();
 setupModelDrawer();
 setupLayerControls();
+setupSkinCanvas();
 applyPreferencesToInterface();
 
 upload.addEventListener("change", function () {
@@ -109,6 +115,7 @@ upload.addEventListener("change", function () {
             preview.src = event.target.result;
             preview.style.display = "block";
             emptyPreviewText.style.display = "none";
+            loadSkinIntoCanvas(image);
 
             if (isModernSkin) {
                 skinTypeText.textContent = "Modern 64x64";
@@ -425,6 +432,97 @@ function updateLayerButton() {
         : "Secondary Layer: Off";
 }
 
+function setupSkinCanvas() {
+    skinCanvasContext.imageSmoothingEnabled = false;
+
+    skinCanvas.addEventListener("mousemove", function (event) {
+        const pixel = getCanvasPixelFromMouse(event);
+
+        if (!pixel) return;
+
+        const colour = getPixelColour(pixel.x, pixel.y);
+
+        pixelInfo.textContent = `X: ${pixel.x}, Y: ${pixel.y}, Colour: ${colour}`;
+    });
+
+    skinCanvas.addEventListener("click", function (event) {
+        const pixel = getCanvasPixelFromMouse(event);
+
+        if (!pixel) return;
+
+        const colour = getPixelColour(pixel.x, pixel.y);
+
+        skinCanvasStatus.textContent = `Selected pixel at X: ${pixel.x}, Y: ${pixel.y}`;
+        pixelInfo.textContent = `X: ${pixel.x}, Y: ${pixel.y}, Colour: ${colour}`;
+    });
+
+    skinCanvas.addEventListener("mouseleave", function () {
+        pixelInfo.textContent = "Hover over the canvas to inspect pixels.";
+    });
+
+    resetSkinCanvas();
+}
+
+function loadSkinIntoCanvas(image) {
+    skinCanvas.width = image.width;
+    skinCanvas.height = image.height;
+
+    skinCanvasContext.imageSmoothingEnabled = false;
+    skinCanvasContext.clearRect(0, 0, skinCanvas.width, skinCanvas.height);
+    skinCanvasContext.drawImage(image, 0, 0);
+
+    skinCanvasStatus.textContent = `Loaded ${image.width}x${image.height} skin canvas.`;
+    pixelInfo.textContent = "Hover over the canvas to inspect pixels.";
+}
+
+function resetSkinCanvas() {
+    skinCanvas.width = 64;
+    skinCanvas.height = 64;
+
+    skinCanvasContext.imageSmoothingEnabled = false;
+    skinCanvasContext.clearRect(0, 0, skinCanvas.width, skinCanvas.height);
+
+    skinCanvasStatus.textContent = "Waiting for a valid skin.";
+    pixelInfo.textContent = "None selected";
+}
+
+function getCanvasPixelFromMouse(event) {
+    const rect = skinCanvas.getBoundingClientRect();
+
+    const x = Math.floor((event.clientX - rect.left) * (skinCanvas.width / rect.width));
+    const y = Math.floor((event.clientY - rect.top) * (skinCanvas.height / rect.height));
+
+    if (x < 0 || y < 0 || x >= skinCanvas.width || y >= skinCanvas.height) {
+        return null;
+    }
+
+    return { x, y };
+}
+
+function getPixelColour(x, y) {
+    const pixelData = skinCanvasContext.getImageData(x, y, 1, 1).data;
+
+    const red = pixelData[0];
+    const green = pixelData[1];
+    const blue = pixelData[2];
+    const alpha = pixelData[3];
+
+    if (alpha === 0) {
+        return "Transparent";
+    }
+
+    return rgbToHex(red, green, blue);
+}
+
+function rgbToHex(red, green, blue) {
+    return "#" + [red, green, blue]
+        .map(function (value) {
+            return value.toString(16).padStart(2, "0");
+        })
+        .join("")
+        .toUpperCase();
+}
+
 function resetPreview() {
     preview.src = "";
     preview.style.display = "none";
@@ -435,7 +533,7 @@ function resetPreview() {
     fileDimensionsText.textContent = "None";
     skinTypeText.textContent = "None";
     modelChoiceText.textContent = "None";
-
+    resetSkinCanvas();
     pendingSkinDataUrl = null;
 }
 

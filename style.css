@@ -93,7 +93,8 @@ nav a:hover {
 .page-card,
 .upload-card,
 .preview-card,
-.viewer-card {
+.viewer-card,
+.canvas-card {
     background: #1e1e1e;
 
     border: 1px solid #333;
@@ -872,4 +873,69 @@ nav a:hover {
     .search-form {
         grid-template-columns: 1fr;
     }
+}
+
+.canvas-card {
+    grid-column: 1 / -1;
+}
+
+.canvas-shell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 560px;
+
+    margin-top: 15px;
+    margin-bottom: 20px;
+
+    padding: 22px;
+
+    background:
+        linear-gradient(45deg, #151515 25%, transparent 25%),
+        linear-gradient(-45deg, #151515 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #151515 75%),
+        linear-gradient(-45deg, transparent 75%, #151515 75%);
+    background-color: #1b1b1b;
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+
+    border: 1px dashed #444;
+    border-radius: 12px;
+}
+
+#skinCanvas {
+    width: 512px;
+    max-width: 100%;
+
+    height: auto;
+
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+
+    background: transparent;
+
+    border: 1px solid #555;
+    cursor: crosshair;
+}
+
+.canvas-info {
+    background: #151515;
+
+    border-radius: 12px;
+
+    padding: 15px;
+}
+
+.canvas-info p {
+    margin-bottom: 8px;
+    color: #d0d0d0;
+}
+
+.canvas-info p:last-child {
+    margin-bottom: 0;
+}
+
+.canvas-info strong {
+    color: white;
 }
