@@ -29,6 +29,8 @@ const applyModelBtn = document.getElementById("applyModelBtn");
 const modelChoiceSummary = document.getElementById("modelChoiceSummary");
 const modelOptionButtons = document.querySelectorAll("[data-model-choice]");
 
+const toggleOuterLayerBtn = document.getElementById("toggleOuterLayerBtn");
+
 const preferencesKey = "mcSkinWorkshopViewerPreferences";
 
 const defaultPreferences = {
@@ -42,10 +44,12 @@ let viewerPreferences = loadViewerPreferences();
 let skinViewer = null;
 let pendingSkinDataUrl = null;
 let pendingModelChoice = viewerPreferences.modelChoice;
+let outerLayerVisible = true;
 
 setupSkinViewer();
 setupViewerControls();
 setupModelDrawer();
+setupLayerControls();
 applyPreferencesToInterface();
 
 upload.addEventListener("change", function () {
@@ -271,6 +275,7 @@ async function loadSkinInto3DViewer(skinDataUrl, modelChoice) {
         });
 
         applyPreferencesToViewer();
+        applyLayerVisibilityToViewer();
 
         const detectedModel = getActiveViewerModel();
 
@@ -374,6 +379,50 @@ function openModelDrawer() {
 function closeModelDrawer() {
     drawerOverlay.classList.remove("open");
     modelDrawer.classList.remove("open");
+}
+
+function setupLayerControls() {
+    toggleOuterLayerBtn.addEventListener("click", function () {
+        outerLayerVisible = !outerLayerVisible;
+
+        applyLayerVisibilityToViewer();
+        updateLayerButton();
+
+        if (outerLayerVisible) {
+            updateViewerStatus("Secondary layer visible.", true);
+        } else {
+            updateViewerStatus("Secondary layer hidden.", true);
+        }
+    });
+
+    updateLayerButton();
+}
+
+function applyLayerVisibilityToViewer() {
+    if (!skinViewer || !skinViewer.playerObject || !skinViewer.playerObject.skin) return;
+
+    const skin = skinViewer.playerObject.skin;
+
+    const outerLayers = [
+        skin.head.outerLayer,
+        skin.body.outerLayer,
+        skin.leftArm.outerLayer,
+        skin.rightArm.outerLayer,
+        skin.leftLeg.outerLayer,
+        skin.rightLeg.outerLayer
+    ];
+
+    outerLayers.forEach(function (layer) {
+        if (layer) {
+            layer.visible = outerLayerVisible;
+        }
+    });
+}
+
+function updateLayerButton() {
+    toggleOuterLayerBtn.textContent = outerLayerVisible
+        ? "Secondary Layer: On"
+        : "Secondary Layer: Off";
 }
 
 function resetPreview() {
