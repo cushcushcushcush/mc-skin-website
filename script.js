@@ -40,7 +40,6 @@ const toolMenuCloseBtn = document.getElementById("toolMenuCloseBtn");
 
 const selectedColourInput = document.getElementById("selectedColour");
 const selectedHexInput = document.getElementById("selectedHex");
-const selectedColourPreview = document.getElementById("selectedColourPreview");
 const brushSizeButtons = document.querySelectorAll("[data-brush-size]");
 const recentColoursContainer = document.getElementById("recentColours");
 const skinPaletteContainer = document.getElementById("skinPalette");
@@ -170,7 +169,7 @@ function setupSkinViewer() {
             height: 400
         });
 
-        skinViewer.background = 0x151515;
+        skinViewer.background = 0x1F2233;
         skinViewer.fov = 50;
         skinViewer.zoom = 0.85;
 
@@ -760,7 +759,6 @@ function applyHexInput() {
 function syncSelectedColourUI() {
     selectedColourInput.value = editorSettings.selectedColour;
     selectedHexInput.value = editorSettings.selectedColour;
-    selectedColourPreview.style.background = editorSettings.selectedColour;
 
     renderRecentColours();
 }
@@ -882,12 +880,7 @@ function generateSkinPalette(image) {
     updateToolSettingsStatus("Skin palette extracted.");
 }
 
-function updateToolSettingsStatus(customMessage) {
-    if (customMessage) {
-        toolSettingsStatus.textContent = customMessage;
-        return;
-    }
-
+function updateToolSettingsStatus() {
     const toolLabel = activeTool ? getToolLabel(activeTool) : "None";
 
     toolSettingsStatus.textContent =

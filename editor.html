@@ -27,15 +27,38 @@
                 <div class="rail-title">Tools</div>
 
                 <div class="editor-tool-rail">
-                    <button type="button" class="editor-tool-button" data-tool="pencil">Pencil</button>
-                    <button type="button" class="editor-tool-button" data-tool="eraser">Eraser</button>
-                    <button type="button" class="editor-tool-button" data-tool="picker">Picker</button>
-                    <button type="button" class="editor-tool-button" data-tool="bucket">Bucket</button>
-                    <button type="button" class="editor-tool-button" data-tool="splice">Splice</button>
-                    <button type="button" class="editor-tool-button" data-tool="colourShade">Colour</button>
-                    <button type="button" class="editor-tool-button" data-tool="undo">Undo</button>
-                    <button type="button" class="editor-tool-button" data-tool="redo">Redo</button>
-                </div>
+    <button type="button" class="editor-tool-button" data-tool="pencil" title="Pencil" aria-label="Pencil">
+        <span class="tool-icon">✎</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="eraser" title="Eraser" aria-label="Eraser">
+        <span class="tool-icon">⌫</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="picker" title="Colour Picker" aria-label="Colour Picker">
+        <span class="tool-icon">⌖</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="bucket" title="Bucket" aria-label="Bucket">
+        <span class="tool-icon">◒</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="splice" title="Splice" aria-label="Splice">
+        <span class="tool-icon">✂</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="colourShade" title="Colour & Shade" aria-label="Colour & Shade">
+        <span class="tool-icon">●</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="undo" title="Undo" aria-label="Undo">
+        <span class="tool-icon">↶</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="redo" title="Redo" aria-label="Redo">
+        <span class="tool-icon">↷</span>
+    </button>
+</div>
 
                 <div id="toolMenu" class="tool-menu" aria-hidden="true">
                     <div class="tool-menu-header">
@@ -72,106 +95,116 @@
 
             <aside class="editor-right-panel">
 
-                <section class="upload-card">
-                    <h3>Upload Skin</h3>
-                    <p class="card-description">Choose a Minecraft skin PNG to begin.</p>
+    <details class="inspector-section" open>
+        <summary>
+            <span>Upload Skin</span>
+        </summary>
 
-                    <label for="skinUpload" class="upload-button">
-                        Choose Skin PNG
-                    </label>
+        <div class="inspector-body upload-card">
+            <p class="card-description">Choose a Minecraft skin PNG to begin.</p>
 
-                    <input type="file" id="skinUpload" accept="image/png">
+            <label for="skinUpload" class="upload-button">
+                Choose Skin PNG
+            </label>
 
-                    <p id="uploadStatus">No skin loaded yet.</p>
+            <input type="file" id="skinUpload" accept="image/png">
 
-                    <div class="skin-info upload-skin-info">
-                        <p><strong>File:</strong> <span id="fileName">None</span></p>
-                        <p><strong>Dimensions:</strong> <span id="fileDimensions">None</span></p>
-                        <p><strong>Skin Type:</strong> <span id="skinType">None</span></p>
-                        <p><strong>Model:</strong> <span id="modelChoice">None</span></p>
-                    </div>
-                </section>
+            <p id="uploadStatus">No skin loaded yet.</p>
 
-                <section class="editor-settings-card">
-                    <div class="settings-heading">
-                        <div>
-                            <h3>Tool Settings</h3>
-                            <p>Colour, brush and palette controls.</p>
+            <div class="skin-info upload-skin-info">
+                <p><strong>File:</strong> <span id="fileName">None</span></p>
+                <p><strong>Dimensions:</strong> <span id="fileDimensions">None</span></p>
+                <p><strong>Skin Type:</strong> <span id="skinType">None</span></p>
+                <p><strong>Model:</strong> <span id="modelChoice">None</span></p>
+            </div>
+        </div>
+    </details>
+
+    <details class="inspector-section" open>
+        <summary>
+            <span>Tool Settings</span>
+        </summary>
+
+        <div class="inspector-body editor-settings-card">
+            <p id="toolSettingsStatus">Ready. No tool selected yet.</p>
+
+            <div class="settings-grid">
+                <div class="setting-block">
+                    <h4>Current Colour</h4>
+
+                    <div class="selected-colour-row">
+                        <input type="color" id="selectedColour" value="#7cff9b">
+
+                        <div class="selected-colour-meta">
+                            <label for="selectedHex">Hex</label>
+                            <input type="text" id="selectedHex" value="#7CFF9B" maxlength="7" spellcheck="false">
                         </div>
                     </div>
+                </div>
 
-                    <p id="toolSettingsStatus">Ready. No tool selected yet.</p>
+                <div class="setting-block">
+                    <h4>Brush Size</h4>
 
-                    <div class="settings-grid">
-                        <div class="setting-block">
-                            <h4>Selected Colour</h4>
-
-                            <div class="selected-colour-row">
-                                <input type="color" id="selectedColour" value="#7cff9b">
-
-                                <div class="selected-colour-meta">
-                                    <label for="selectedHex">Hex</label>
-                                    <input type="text" id="selectedHex" value="#7CFF9B" maxlength="7" spellcheck="false">
-                                </div>
-
-                                <div id="selectedColourPreview" class="selected-colour-preview"></div>
-                            </div>
-                        </div>
-
-                        <div class="setting-block">
-                            <h4>Brush Size</h4>
-
-                            <div class="choice-row" id="brushSizeChoices">
-                                <button type="button" class="choice-button active" data-brush-size="1">1 px</button>
-                                <button type="button" class="choice-button" data-brush-size="2">2 px</button>
-                                <button type="button" class="choice-button" data-brush-size="3">3 px</button>
-                            </div>
-                        </div>
-
-                        <div class="setting-block">
-                            <h4>Recent Colours</h4>
-                            <div id="recentColours" class="swatch-grid"></div>
-                            <p class="settings-note">Recently chosen colours appear here.</p>
-                        </div>
-
-                        <div class="setting-block">
-                            <h4>Skin Palette</h4>
-                            <div id="skinPalette" class="swatch-grid"></div>
-                            <p class="settings-note">Upload a skin to extract its main colours.</p>
-                        </div>
+                    <div class="choice-row" id="brushSizeChoices">
+                        <button type="button" class="choice-button active" data-brush-size="1">1 px</button>
+                        <button type="button" class="choice-button" data-brush-size="2">2 px</button>
+                        <button type="button" class="choice-button" data-brush-size="3">3 px</button>
                     </div>
-                </section>
+                </div>
 
-                <section class="viewer-control-card">
-                    <h3>Viewer Controls</h3>
+                <div class="setting-block">
+                    <h4>Recent Colours</h4>
 
-                    <p id="viewerStatus">Waiting for a valid skin.</p>
+                    <div id="recentColours" class="swatch-grid"></div>
 
-                    <div class="viewer-controls">
-                        <button type="button" id="toggleRotationBtn" class="secondary-button">Pause Rotation</button>
-                        <button type="button" id="toggleAnimationBtn" class="secondary-button">Pause Walk</button>
-                        <button type="button" id="resetPreferencesBtn" class="secondary-button">Reset Defaults</button>
-                    </div>
+                    <p class="settings-note">Recently chosen colours appear here.</p>
+                </div>
 
-                    <label class="slider-control" for="animationSpeed">
-                        Walk Speed:
-                        <input type="range" id="animationSpeed" min="0" max="3" step="0.1" value="0.7">
-                        <span id="speedValue">0.7</span>
-                    </label>
+                <div class="setting-block">
+                    <h4>Skin Palette</h4>
 
-                    <p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
-                    <p id="prefsStatus" class="prefs-note">Viewer preferences save automatically on this browser.</p>
+                    <div id="skinPalette" class="swatch-grid"></div>
 
-                    <div class="layer-controls">
-                        <h4>Layer Visibility</h4>
+                    <p class="settings-note">Upload a skin to extract its main colours.</p>
+                </div>
+            </div>
+        </div>
+    </details>
 
-                        <button type="button" id="toggleOuterLayerBtn" class="secondary-button">
-                            Secondary Layer: On
-                        </button>
-                    </div>
-                </section>
+    <details class="inspector-section">
+        <summary>
+            <span>Viewer Controls</span>
+        </summary>
 
-            </aside>
+        <div class="inspector-body viewer-control-card">
+            <p id="viewerStatus">Waiting for a valid skin.</p>
+
+            <div class="viewer-controls">
+                <button type="button" id="toggleRotationBtn" class="secondary-button">Pause Rotation</button>
+                <button type="button" id="toggleAnimationBtn" class="secondary-button">Pause Walk</button>
+                <button type="button" id="resetPreferencesBtn" class="secondary-button">Reset Defaults</button>
+            </div>
+
+            <label class="slider-control" for="animationSpeed">
+                Walk Speed:
+                <input type="range" id="animationSpeed" min="0" max="3" step="0.1" value="0.7">
+                <span id="speedValue">0.7</span>
+            </label>
+
+            <p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
+            <p id="prefsStatus" class="prefs-note">Viewer preferences save automatically on this browser.</p>
+
+            <div class="layer-controls">
+                <h4>Layer Visibility</h4>
+
+                <button type="button" id="toggleOuterLayerBtn" class="secondary-button">
+                    Secondary Layer: On
+                </button>
+            </div>
+        </div>
+    </details>
+
+</aside>
         </section>
     </main>
 

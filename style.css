@@ -1493,3 +1493,947 @@ nav a:hover {
         height: 430px;
     }
 }
+
+/* Compact editor workspace pass */
+
+.editor-page {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.editor-page header {
+    min-height: 50px;
+    padding: 0 28px;
+
+    background: #11131c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.editor-page header h1 {
+    font-size: 1.1rem;
+}
+
+.editor-page nav a {
+    margin-left: 18px;
+
+    font-size: 0.82rem;
+    color: #f0f0f0;
+}
+
+.editor-app-shell {
+    width: min(1260px, calc(100% - 36px));
+
+    height: calc(100vh - 86px);
+    min-height: 640px;
+
+    margin: 18px auto;
+}
+
+.editor-app-layout {
+    display: grid;
+    grid-template-columns: 78px minmax(500px, 1fr) 330px;
+    gap: 14px;
+
+    height: 100%;
+    align-items: stretch;
+}
+
+.editor-left-rail,
+.editor-stage,
+.editor-right-panel > section,
+.editor-viewer-card {
+    background: #151722;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+
+    box-shadow: none;
+}
+
+.editor-left-rail {
+    position: relative;
+    top: auto;
+
+    min-height: 0;
+    height: 100%;
+
+    padding: 10px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.rail-title {
+    margin-bottom: 10px;
+
+    font-size: 0.72rem;
+    color: #9ca0b8;
+    letter-spacing: 0.12em;
+}
+
+.editor-page .editor-tool-rail {
+    display: grid;
+    gap: 8px;
+}
+
+.editor-page .editor-tool-button {
+    width: 100%;
+
+    padding: 10px 6px;
+
+    border-radius: 10px;
+
+    font-size: 0.78rem;
+}
+
+.editor-page .tool-menu {
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 8px;
+
+    width: 300px;
+
+    margin-left: 0;
+    margin-top: 0;
+
+    background: #151722;
+
+    z-index: 30;
+}
+
+.editor-page .tool-menu.open {
+    max-height: 520px;
+    margin-top: 0;
+}
+
+.tool-menu-header {
+    padding: 14px;
+}
+
+.tool-menu-header h3 {
+    font-size: 1rem;
+}
+
+.tool-menu-header p {
+    font-size: 0.78rem;
+}
+
+.tool-menu-options {
+    padding: 14px;
+    gap: 8px;
+}
+
+.tool-menu-option {
+    padding: 11px 12px;
+    border-radius: 10px;
+}
+
+.tool-menu-option strong {
+    font-size: 0.9rem;
+}
+
+.tool-menu-option span {
+    font-size: 0.78rem;
+}
+
+.editor-stage {
+    padding: 14px;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+}
+
+.stage-header {
+    flex: 0 0 auto;
+
+    margin-bottom: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 14px;
+}
+
+.stage-header h2 {
+    margin-bottom: 4px;
+
+    font-size: 1.35rem;
+}
+
+.stage-header p {
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+.editor-page #activeToolStatus {
+    min-width: 210px;
+
+    padding: 9px 10px;
+
+    border-radius: 10px;
+
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.editor-viewer-card {
+    flex: 1;
+
+    min-height: 0;
+
+    padding: 12px;
+}
+
+.editor-page .viewer-box {
+    min-height: 0;
+    height: 100%;
+
+    margin: 0;
+    padding: 10px;
+
+    border-radius: 12px;
+
+    background:
+        radial-gradient(circle at center, rgba(124, 255, 155, 0.055), transparent 35%),
+        #101116;
+}
+
+.editor-page #skin3dCanvas {
+    width: 360px;
+    height: 500px;
+}
+
+.editor-right-panel {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    overflow-y: auto;
+    padding-right: 4px;
+
+    scrollbar-width: thin;
+}
+
+.editor-right-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.editor-right-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.editor-right-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+}
+
+.editor-page .upload-card,
+.editor-page .editor-settings-card,
+.editor-page .viewer-control-card {
+    width: auto;
+    margin: 0;
+
+    padding: 14px;
+
+    border-radius: 14px;
+}
+
+.editor-page .upload-card h3,
+.editor-page .editor-settings-card h3,
+.editor-page .viewer-control-card h3 {
+    margin-bottom: 6px;
+
+    font-size: 1.05rem;
+}
+
+.editor-page .card-description,
+.editor-page .settings-heading p,
+.editor-page .viewer-note,
+.editor-page .prefs-note,
+.editor-page .settings-note {
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.editor-page .card-description {
+    margin-bottom: 10px;
+}
+
+.editor-page .upload-button {
+    padding: 9px 12px;
+
+    border-radius: 9px;
+
+    font-size: 0.82rem;
+}
+
+.editor-page #uploadStatus {
+    margin-top: 10px;
+
+    font-size: 0.8rem;
+}
+
+.editor-page .skin-info {
+    padding: 11px;
+    border-radius: 10px;
+}
+
+.editor-page .skin-info p {
+    margin-bottom: 5px;
+
+    font-size: 0.78rem;
+}
+
+.editor-page .settings-heading {
+    margin-bottom: 10px;
+}
+
+.editor-page #toolSettingsStatus {
+    margin-bottom: 10px;
+
+    padding: 8px 10px;
+
+    border-radius: 9px;
+
+    font-size: 0.78rem;
+}
+
+.editor-page .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.editor-page .setting-block {
+    padding: 11px;
+    border-radius: 11px;
+}
+
+.editor-page .setting-block h4 {
+    margin-bottom: 8px;
+
+    font-size: 0.86rem;
+}
+
+.editor-page .selected-colour-row {
+    gap: 10px;
+}
+
+.editor-page #selectedColour,
+.editor-page .selected-colour-preview {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 9px;
+}
+
+.editor-page #selectedHex {
+    width: 105px;
+
+    padding: 8px 9px;
+
+    border-radius: 8px;
+
+    font-size: 0.8rem;
+}
+
+.editor-page .selected-colour-meta label {
+    font-size: 0.72rem;
+}
+
+.editor-page .choice-row {
+    gap: 7px;
+}
+
+.editor-page .choice-button {
+    padding: 8px 10px;
+
+    border-radius: 9px;
+
+    font-size: 0.78rem;
+}
+
+.editor-page .swatch-grid {
+    gap: 7px;
+    min-height: 30px;
+}
+
+.editor-page .swatch-button {
+    width: 28px;
+    height: 28px;
+
+    border-radius: 8px;
+}
+
+.editor-page .viewer-control-card {
+    flex-shrink: 0;
+}
+
+.editor-page #viewerStatus {
+    margin-bottom: 10px;
+
+    font-size: 0.8rem;
+}
+
+.editor-page .viewer-controls {
+    gap: 7px;
+    margin-bottom: 10px;
+}
+
+.editor-page .secondary-button {
+    padding: 8px 10px;
+
+    border-radius: 9px;
+
+    font-size: 0.76rem;
+}
+
+.editor-page .slider-control {
+    margin-bottom: 8px;
+
+    font-size: 0.78rem;
+}
+
+.editor-page .slider-control input {
+    width: 120px;
+}
+
+.editor-page .layer-controls {
+    margin-top: 12px;
+    padding-top: 12px;
+}
+
+.editor-page .layer-controls h4 {
+    margin-bottom: 8px;
+
+    font-size: 0.86rem;
+}
+
+@media (max-width: 1180px) {
+    .editor-app-shell {
+        height: auto;
+        min-height: 0;
+    }
+
+    .editor-app-layout {
+        grid-template-columns: 78px 1fr;
+        grid-template-areas:
+            "tools stage"
+            "right right";
+
+        height: auto;
+    }
+
+    .editor-left-rail {
+        grid-area: tools;
+        min-height: 560px;
+    }
+
+    .editor-stage {
+        grid-area: stage;
+        min-height: 620px;
+    }
+
+    .editor-right-panel {
+        grid-area: right;
+
+        height: auto;
+        overflow: visible;
+
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 860px) {
+    .editor-app-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "stage"
+            "tools"
+            "right";
+    }
+
+    .editor-left-rail {
+        min-height: auto;
+    }
+
+    .editor-page .editor-tool-rail {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .editor-stage {
+        min-height: 520px;
+    }
+
+    .editor-right-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .stage-header {
+        flex-direction: column;
+    }
+
+    .editor-page #activeToolStatus {
+        width: 100%;
+    }
+
+    .editor-page .tool-menu {
+        position: static;
+
+        width: 100%;
+
+        margin-top: 10px;
+    }
+
+    .editor-page #skin3dCanvas {
+        width: 310px;
+        height: 420px;
+    }
+}
+
+/* Sleeker colour control and editor stage cleanup */
+
+.editor-page .editor-stage {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.editor-page .stage-header {
+    padding: 0 2px;
+}
+
+.editor-page .editor-viewer-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.editor-page .viewer-box {
+    background: #101116;
+
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+}
+
+.editor-page .selected-colour-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    width: fit-content;
+
+    padding: 6px 10px 6px 6px;
+
+    background: #101116;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px 12px 12px 999px;
+}
+
+.editor-page #selectedColour {
+    width: 42px;
+    height: 42px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    overflow: hidden;
+    cursor: pointer;
+
+    background: transparent;
+}
+
+.editor-page #selectedColour::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.editor-page #selectedColour::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
+
+.editor-page #selectedColour::-moz-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
+
+.editor-page .selected-colour-meta {
+    gap: 4px;
+}
+
+.editor-page .selected-colour-meta label {
+    font-size: 0.7rem;
+    color: #9ca0b8;
+}
+
+.editor-page #selectedHex {
+    width: 96px;
+
+    padding: 7px 8px;
+
+    background: transparent;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 0.82rem;
+    color: white;
+}
+
+.editor-page #selectedHex:focus {
+    outline: 1px solid rgba(124, 255, 155, 0.45);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Proportion and icon tool pass */
+
+.editor-app-shell {
+    width: min(1500px, calc(100% - 48px));
+
+    height: calc(100vh - 74px);
+    min-height: 660px;
+
+    margin: 14px auto;
+}
+
+.editor-app-layout {
+    grid-template-columns: 70px minmax(660px, 1fr) 340px;
+    gap: 16px;
+}
+
+.editor-left-rail {
+    width: 70px;
+
+    padding: 10px 8px;
+
+    background: rgba(21, 23, 34, 0.78);
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+.rail-title {
+    margin-bottom: 10px;
+
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+}
+
+.editor-page .editor-tool-rail {
+    gap: 8px;
+}
+
+.editor-page .editor-tool-button {
+    width: 44px;
+    height: 44px;
+
+    padding: 0;
+    margin: 0 auto;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 12px;
+
+    font-size: 1.1rem;
+    line-height: 1;
+
+    background: #20222d;
+    border-color: rgba(255, 255, 255, 0.09);
+}
+
+.editor-page .editor-tool-button:hover {
+    transform: translateY(-1px);
+
+    background: #292c3a;
+    border-color: rgba(124, 255, 155, 0.75);
+}
+
+.editor-page .editor-tool-button.active {
+    background: #7CFF9B;
+    color: #101010;
+    border-color: #7CFF9B;
+}
+
+.tool-icon {
+    display: block;
+
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.editor-page .editor-stage {
+    min-width: 0;
+}
+
+.editor-page .stage-header {
+    margin-bottom: 10px;
+}
+
+.editor-page .stage-header h2 {
+    font-size: 1.45rem;
+}
+
+.editor-page .stage-header p {
+    font-size: 0.86rem;
+    color: #c6cad8;
+}
+
+.editor-page .editor-viewer-card {
+    min-height: 0;
+}
+
+.editor-page .viewer-box {
+    background: transparent;
+
+    border: none;
+    border-radius: 0;
+
+    padding: 0;
+}
+
+.editor-page #skin3dCanvas {
+    width: 480px;
+    height: 600px;
+}
+
+.editor-right-panel {
+    width: 340px;
+}
+
+.editor-page .upload-card,
+.editor-page .editor-settings-card,
+.editor-page .viewer-control-card {
+    background: rgba(21, 23, 34, 0.86);
+    border-color: rgba(255, 255, 255, 0.075);
+}
+
+.editor-page .tool-menu {
+    left: calc(100% + 12px);
+}
+
+@media (max-width: 1280px) {
+    .editor-app-layout {
+        grid-template-columns: 70px minmax(560px, 1fr) 320px;
+    }
+
+    .editor-right-panel {
+        width: 320px;
+    }
+
+    .editor-page #skin3dCanvas {
+        width: 420px;
+        height: 540px;
+    }
+}
+
+@media (max-width: 1180px) {
+    .editor-app-shell {
+        height: auto;
+        min-height: 0;
+    }
+
+    .editor-app-layout {
+        grid-template-columns: 70px 1fr;
+    }
+
+    .editor-right-panel {
+        width: auto;
+    }
+}
+
+/* Minimal editor polish: floating tools and compact inspector */
+
+.editor-left-rail {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+
+    padding: 0;
+    padding-top: 64px;
+
+    width: 54px;
+}
+
+.rail-title {
+    display: none;
+}
+
+.editor-page .editor-tool-rail {
+    gap: 10px;
+}
+
+.editor-page .editor-tool-button {
+    width: 42px;
+    height: 42px;
+
+    background: rgba(16, 17, 22, 0.92);
+
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.editor-page .editor-tool-button:hover {
+    background: rgba(35, 38, 51, 0.98);
+
+    border-color: rgba(124, 255, 155, 0.8);
+
+    transform: translateY(-1px);
+}
+
+.editor-page .editor-tool-button.active {
+    background: #7CFF9B;
+    color: #101010;
+
+    border-color: #7CFF9B;
+
+    box-shadow: 0 8px 22px rgba(124, 255, 155, 0.18);
+}
+
+.editor-page .tool-menu {
+    top: 64px;
+}
+
+.editor-page .card-description,
+.editor-page .settings-heading p,
+.editor-page .settings-note,
+.editor-page .viewer-note,
+.editor-page .prefs-note {
+    display: none;
+}
+
+.editor-page .upload-card,
+.editor-page .editor-settings-card,
+.editor-page .viewer-control-card {
+    padding: 13px;
+}
+
+.editor-page .upload-card h3,
+.editor-page .editor-settings-card h3,
+.editor-page .viewer-control-card h3 {
+    margin-bottom: 8px;
+}
+
+.editor-page .skin-info {
+    margin-top: 12px;
+}
+
+.editor-page #toolSettingsStatus {
+    color: #d8dbe8;
+}
+
+/* Collapsible right inspector */
+
+.editor-right-panel {
+    gap: 10px;
+}
+
+.inspector-section {
+    background: rgba(21, 23, 34, 0.86);
+
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 14px;
+
+    overflow: hidden;
+}
+
+.inspector-section summary {
+    list-style: none;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 13px;
+
+    cursor: pointer;
+
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+
+    user-select: none;
+}
+
+.inspector-section summary::-webkit-details-marker {
+    display: none;
+}
+
+.inspector-section summary::after {
+    content: "+";
+
+    width: 24px;
+    height: 24px;
+
+    display: grid;
+    place-items: center;
+
+    background: rgba(255, 255, 255, 0.06);
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+
+    color: #c9ccda;
+    font-size: 1rem;
+}
+
+.inspector-section[open] summary::after {
+    content: "−";
+}
+
+.inspector-section summary:hover {
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.inspector-body {
+    padding: 0 13px 13px 13px;
+}
+
+.editor-page .inspector-body.upload-card,
+.editor-page .inspector-body.editor-settings-card,
+.editor-page .inspector-body.viewer-control-card {
+    width: auto;
+    margin: 0;
+    padding: 0 13px 13px 13px;
+
+    background: transparent;
+    border: none;
+    border-radius: 0;
+
+    box-shadow: none;
+}
+
+.editor-page .inspector-body .skin-info {
+    margin-top: 12px;
+}
+
+.editor-page .inspector-section .setting-block {
+    background: #101116;
+
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+.editor-page .inspector-section #toolSettingsStatus {
+    margin-bottom: 10px;
+}
+
+.editor-page .inspector-section .layer-controls {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.editor-page .inspector-section:not([open]) {
+    opacity: 0.92;
+}
+
+.editor-page .inspector-section:not([open]):hover {
+    opacity: 1;
+}
