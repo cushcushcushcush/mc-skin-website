@@ -63,6 +63,56 @@
     </div>
 </section>
 
+<section class="editor-settings-card">
+    <div class="settings-heading">
+        <div>
+            <h3>Tool Settings</h3>
+            <p>Colour, brush and layer controls for the editor.</p>
+        </div>
+
+        <p id="toolSettingsStatus">Ready. No tool selected yet.</p>
+    </div>
+
+    <div class="settings-grid">
+        <div class="setting-block">
+            <h4>Selected Colour</h4>
+
+            <div class="selected-colour-row">
+                <input type="color" id="selectedColour" value="#7cff9b">
+
+                <div class="selected-colour-meta">
+                    <label for="selectedHex">Hex</label>
+                    <input type="text" id="selectedHex" value="#7CFF9B" maxlength="7" spellcheck="false">
+                </div>
+
+                <div id="selectedColourPreview" class="selected-colour-preview"></div>
+            </div>
+        </div>
+
+        <div class="setting-block">
+            <h4>Brush Size</h4>
+
+            <div class="choice-row" id="brushSizeChoices">
+                <button type="button" class="choice-button active" data-brush-size="1">1 px</button>
+                <button type="button" class="choice-button" data-brush-size="2">2 px</button>
+                <button type="button" class="choice-button" data-brush-size="3">3 px</button>
+            </div>
+        </div>
+
+        <div class="setting-block">
+            <h4>Recent Colours</h4>
+            <div id="recentColours" class="swatch-grid"></div>
+            <p class="settings-note">Recently chosen colours will appear here.</p>
+        </div>
+
+        <div class="setting-block wide-block">
+            <h4>Skin Palette</h4>
+            <div id="skinPalette" class="swatch-grid"></div>
+            <p class="settings-note">Upload a skin to automatically extract its main colours.</p>
+        </div>
+    </div>
+</section>
+
         <section class="tool-panel">
             <div class="upload-card">
                 <h3>Upload Skin</h3>

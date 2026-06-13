@@ -45,6 +45,14 @@ const toolMenuOptions = document.getElementById("toolMenuOptions");
 const toolMenuBackBtn = document.getElementById("toolMenuBackBtn");
 const toolMenuCloseBtn = document.getElementById("toolMenuCloseBtn");
 
+const selectedColourInput = document.getElementById("selectedColour");
+const selectedHexInput = document.getElementById("selectedHex");
+const selectedColourPreview = document.getElementById("selectedColourPreview");
+const brushSizeButtons = document.querySelectorAll("[data-brush-size]");
+const recentColoursContainer = document.getElementById("recentColours");
+const skinPaletteContainer = document.getElementById("skinPalette");
+const toolSettingsStatus = document.getElementById("toolSettingsStatus");
+
 const preferencesKey = "mcSkinWorkshopViewerPreferences";
 
 const defaultPreferences = {
@@ -62,11 +70,19 @@ let outerLayerVisible = true;
 let activeTool = null;
 let toolMenuStack = [];
 
+let editorSettings = {
+    selectedColour: "#7CFF9B",
+    brushSize: 1,
+    recentColours: ["#7CFF9B"],
+    skinPalette: []
+};
+
 setupSkinViewer();
 setupViewerControls();
 setupModelDrawer();
 setupLayerControls();
 setupEditorTools();
+setupEditorSettings();
 applyPreferencesToInterface();
 
 upload.addEventListener("change", function () {
@@ -127,6 +143,7 @@ upload.addEventListener("change", function () {
             preview.style.display = "block";
             emptyPreviewText.style.display = "none";
             loadSkinIntoCanvas(image);
+            generateSkinPalette(image);
 
             if (isModernSkin) {
                 skinTypeText.textContent = "Modern 64x64";
@@ -674,6 +691,7 @@ function setupEditorTools() {
 
 function selectEditorTool(toolName) {
     activeTool = toolName;
+    updateToolSettingsStatus();
 
     toolButtons.forEach(function (button) {
         if (button.dataset.tool === toolName) {
@@ -699,6 +717,7 @@ function selectEditorTool(toolName) {
     }
 
     activeToolStatus.textContent = `${getToolLabel(toolName)} selected. Editing logic coming soon.`;
+    updateToolSettingsStatus();
 }
 
 function openToolMenu(menu) {
@@ -775,6 +794,213 @@ function getToolLabel(toolName) {
     return labels[toolName] || toolName;
 }
 
+function setupEditorSettings() {
+    syncSelectedColourUI();
+    renderBrushSizeButtons();
+    renderRecentColours();
+    renderSkinPalette();
+    updateToolSettingsStatus();
+
+    selectedColourInput.addEventListener("input", function () {
+        editorSettings.selectedColour = normaliseHex(selectedColourInput.value);
+        syncSelectedColourUI();
+        updateToolSettingsStatus();
+    });
+
+    selectedColourInput.addEventListener("change", function () {
+        editorSettings.selectedColour = normaliseHex(selectedColourInput.value);
+        addRecentColour(editorSettings.selectedColour);
+        syncSelectedColourUI();
+        updateToolSettingsStatus("Colour updated.");
+    });
+
+    selectedHexInput.addEventListener("blur", function () {
+        applyHexInput();
+    });
+
+    selectedHexInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            applyHexInput();
+        }
+    });
+
+    brushSizeButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            editorSettings.brushSize = Number(button.dataset.brushSize);
+            renderBrushSizeButtons();
+            updateToolSettingsStatus("Brush size updated.");
+        });
+    });
+
+}
+
+function applyHexInput() {
+    const rawValue = selectedHexInput.value.trim();
+
+    if (!isValidHex(rawValue)) {
+        selectedHexInput.value = editorSettings.selectedColour;
+        updateToolSettingsStatus("Invalid hex colour. Reverted to previous value.");
+        return;
+    }
+
+    editorSettings.selectedColour = normaliseHex(rawValue);
+    addRecentColour(editorSettings.selectedColour);
+    syncSelectedColourUI();
+    updateToolSettingsStatus("Hex colour applied.");
+}
+
+function syncSelectedColourUI() {
+    selectedColourInput.value = editorSettings.selectedColour;
+    selectedHexInput.value = editorSettings.selectedColour;
+    selectedColourPreview.style.background = editorSettings.selectedColour;
+
+    renderRecentColours();
+}
+
+function renderBrushSizeButtons() {
+    brushSizeButtons.forEach(function (button) {
+        const size = Number(button.dataset.brushSize);
+
+        if (size === editorSettings.brushSize) {
+            button.classList.add("active");
+        } else {
+            button.classList.remove("active");
+        }
+    });
+}
+
+function renderRecentColours() {
+    recentColoursContainer.innerHTML = "";
+
+    if (editorSettings.recentColours.length === 0) {
+        recentColoursContainer.innerHTML = `<div class="swatch-button empty-swatch">None</div>`;
+        return;
+    }
+
+    editorSettings.recentColours.forEach(function (colour) {
+        const swatch = document.createElement("button");
+
+        swatch.type = "button";
+        swatch.className = "swatch-button";
+        swatch.title = colour;
+        swatch.style.background = colour;
+
+        swatch.addEventListener("click", function () {
+            editorSettings.selectedColour = colour;
+            syncSelectedColourUI();
+            updateToolSettingsStatus("Recent colour selected.");
+        });
+
+        recentColoursContainer.appendChild(swatch);
+    });
+}
+
+function renderSkinPalette() {
+    skinPaletteContainer.innerHTML = "";
+
+    if (editorSettings.skinPalette.length === 0) {
+        skinPaletteContainer.innerHTML = `<div class="swatch-button empty-swatch">No palette yet</div>`;
+        return;
+    }
+
+    editorSettings.skinPalette.forEach(function (colour) {
+        const swatch = document.createElement("button");
+
+        swatch.type = "button";
+        swatch.className = "swatch-button";
+        swatch.title = colour;
+        swatch.style.background = colour;
+
+        swatch.addEventListener("click", function () {
+            editorSettings.selectedColour = colour;
+            addRecentColour(colour);
+            syncSelectedColourUI();
+            updateToolSettingsStatus("Palette colour selected.");
+        });
+
+        skinPaletteContainer.appendChild(swatch);
+    });
+}
+
+function addRecentColour(colour) {
+    const normalised = normaliseHex(colour);
+
+    editorSettings.recentColours = [
+        normalised,
+        ...editorSettings.recentColours.filter(function (item) {
+            return item !== normalised;
+        })
+    ].slice(0, 10);
+
+    renderRecentColours();
+}
+
+function generateSkinPalette(image) {
+    const paletteCanvas = document.createElement("canvas");
+    const paletteContext = paletteCanvas.getContext("2d", { willReadFrequently: true });
+
+    paletteCanvas.width = image.width;
+    paletteCanvas.height = image.height;
+
+    paletteContext.imageSmoothingEnabled = false;
+    paletteContext.drawImage(image, 0, 0);
+
+    const imageData = paletteContext.getImageData(0, 0, image.width, image.height).data;
+    const colourCounts = new Map();
+
+    for (let index = 0; index < imageData.length; index += 4) {
+        const red = imageData[index];
+        const green = imageData[index + 1];
+        const blue = imageData[index + 2];
+        const alpha = imageData[index + 3];
+
+        if (alpha === 0) continue;
+
+        const hex = rgbToHex(red, green, blue);
+        colourCounts.set(hex, (colourCounts.get(hex) || 0) + 1);
+    }
+
+    const sortedColours = Array.from(colourCounts.entries())
+        .sort(function (a, b) {
+            return b[1] - a[1];
+        })
+        .slice(0, 14)
+        .map(function (entry) {
+            return entry[0];
+        });
+
+    editorSettings.skinPalette = sortedColours;
+    renderSkinPalette();
+    updateToolSettingsStatus("Skin palette extracted.");
+}
+
+function updateToolSettingsStatus(customMessage) {
+    if (customMessage) {
+        toolSettingsStatus.textContent = customMessage;
+        return;
+    }
+
+    const toolLabel = activeTool ? getToolLabel(activeTool) : "None";
+
+    toolSettingsStatus.textContent =
+        `Tool: ${toolLabel} | Colour: ${editorSettings.selectedColour} | Brush: ${editorSettings.brushSize}px`;
+}
+
+function normaliseHex(hex) {
+    let value = hex.trim().toUpperCase();
+
+    if (!value.startsWith("#")) {
+        value = "#" + value;
+    }
+
+    return value;
+}
+
+function isValidHex(hex) {
+    return /^#?[0-9A-Fa-f]{6}$/.test(hex.trim());
+}
+
 function resetPreview() {
     preview.src = "";
     preview.style.display = "none";
@@ -787,6 +1013,10 @@ function resetPreview() {
     modelChoiceText.textContent = "None";
     resetSkinCanvas();
     pendingSkinDataUrl = null;
+
+    editorSettings.skinPalette = [];
+    renderSkinPalette();
+    updateToolSettingsStatus();
 }
 
 function showError(message) {
