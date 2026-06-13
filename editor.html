@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor - MC Skin Workshop</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="editor-page">
+
+    <header>
+        <h1>MC Skin Workshop</h1>
+
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="editor.html">Editor</a>
+            <a href="gallery.html">Gallery</a>
+            <a href="about.html">About</a>
+        </nav>
+    </header>
+
+    <main class="editor-app-shell">
+        <section class="editor-app-layout">
+
+            <aside class="editor-left-rail">
+                <div class="rail-title">Tools</div>
+
+                <div class="editor-tool-rail">
+    <button type="button" class="editor-tool-button" data-tool="pencil" title="Pencil" aria-label="Pencil">
+        <span class="tool-icon">✎</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="eraser" title="Eraser" aria-label="Eraser">
+        <span class="tool-icon">⌫</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="picker" title="Colour Picker" aria-label="Colour Picker">
+        <span class="tool-icon">⌖</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="bucket" title="Bucket" aria-label="Bucket">
+        <span class="tool-icon">◒</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="splice" title="Splice" aria-label="Splice">
+        <span class="tool-icon">✂</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="colourShade" title="Colour & Shade" aria-label="Colour & Shade">
+        <span class="tool-icon">●</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="undo" title="Undo" aria-label="Undo">
+        <span class="tool-icon">↶</span>
+    </button>
+
+    <button type="button" class="editor-tool-button" data-tool="redo" title="Redo" aria-label="Redo">
+        <span class="tool-icon">↷</span>
+    </button>
+</div>
+
+                <div id="toolMenu" class="tool-menu" aria-hidden="true">
+                    <div class="tool-menu-header">
+                        <button type="button" id="toolMenuBackBtn" class="tool-menu-small-button">←</button>
+
+                        <div>
+                            <h3 id="toolMenuTitle">Tool Options</h3>
+                            <p id="toolMenuPath">Choose an option.</p>
+                        </div>
+
+                        <button type="button" id="toolMenuCloseBtn" class="tool-menu-small-button">×</button>
+                    </div>
+
+                    <div id="toolMenuOptions" class="tool-menu-options"></div>
+                </div>
+            </aside>
+
+            <section class="editor-stage">
+                <div class="stage-header">
+                    <div>
+                        <h2>3D Skin Editor</h2>
+                        <p>Upload a skin, choose a model type, then edit directly on the 3D player.</p>
+                    </div>
+
+                    <p id="activeToolStatus">No tool selected.</p>
+                </div>
+
+                <div class="editor-viewer-card">
+                    <div class="viewer-box">
+                        <canvas id="skin3dCanvas"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="editor-right-panel">
+
+    <details class="inspector-section" open>
+        <summary>
+            <span>Upload Skin</span>
+        </summary>
+
+        <div class="inspector-body upload-card">
+            <p class="card-description">Choose a Minecraft skin PNG to begin.</p>
+
+            <label for="skinUpload" class="upload-button">
+                Choose Skin PNG
+            </label>
+
+            <input type="file" id="skinUpload" accept="image/png">
+
+            <p id="uploadStatus">No skin loaded yet.</p>
+
+            <div class="skin-info upload-skin-info">
+                <p><strong>File:</strong> <span id="fileName">None</span></p>
+                <p><strong>Dimensions:</strong> <span id="fileDimensions">None</span></p>
+                <p><strong>Skin Type:</strong> <span id="skinType">None</span></p>
+                <p><strong>Model:</strong> <span id="modelChoice">None</span></p>
+            </div>
+        </div>
+    </details>
+
+    <details class="inspector-section" open>
+        <summary>
+            <span>Tool Settings</span>
+        </summary>
+
+        <div class="inspector-body editor-settings-card">
+            <p id="toolSettingsStatus">Ready. No tool selected yet.</p>
+
+            <div class="settings-grid">
+                <div class="setting-block">
+                    <h4>Current Colour</h4>
+
+                    <div class="selected-colour-row">
+                        <input type="color" id="selectedColour" value="#7cff9b">
+
+                        <div class="selected-colour-meta">
+                            <label for="selectedHex">Hex</label>
+                            <input type="text" id="selectedHex" value="#7CFF9B" maxlength="7" spellcheck="false">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-block">
+                    <h4>Brush Size</h4>
+
+                    <div class="choice-row" id="brushSizeChoices">
+                        <button type="button" class="choice-button active" data-brush-size="1">1 px</button>
+                        <button type="button" class="choice-button" data-brush-size="2">2 px</button>
+                        <button type="button" class="choice-button" data-brush-size="3">3 px</button>
+                    </div>
+                </div>
+
+                <div class="setting-block">
+                    <h4>Recent Colours</h4>
+
+                    <div id="recentColours" class="swatch-grid"></div>
+
+                    <p class="settings-note">Recently chosen colours appear here.</p>
+                </div>
+
+                <div class="setting-block">
+                    <h4>Skin Palette</h4>
+
+                    <div id="skinPalette" class="swatch-grid"></div>
+
+                    <p class="settings-note">Upload a skin to extract its main colours.</p>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <details class="inspector-section">
+        <summary>
+            <span>Viewer Controls</span>
+        </summary>
+
+        <div class="inspector-body viewer-control-card">
+            <p id="viewerStatus">Waiting for a valid skin.</p>
+
+            <div class="viewer-controls">
+                <button type="button" id="toggleRotationBtn" class="secondary-button">Pause Rotation</button>
+                <button type="button" id="toggleAnimationBtn" class="secondary-button">Pause Walk</button>
+                <button type="button" id="resetPreferencesBtn" class="secondary-button">Reset Defaults</button>
+            </div>
+
+            <label class="slider-control" for="animationSpeed">
+                Walk Speed:
+                <input type="range" id="animationSpeed" min="0" max="3" step="0.1" value="0.7">
+                <span id="speedValue">0.7</span>
+            </label>
+
+            <p class="viewer-note">Drag the model to rotate. Scroll to zoom.</p>
+            <p id="prefsStatus" class="prefs-note">Viewer preferences save automatically on this browser.</p>
+
+            <div class="layer-controls">
+                <h4>Layer Visibility</h4>
+
+                <button type="button" id="toggleOuterLayerBtn" class="secondary-button">
+                    Secondary Layer: On
+                </button>
+            </div>
+        </div>
+    </details>
+
+</aside>
+        </section>
+    </main>
+
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+
+    <aside id="modelDrawer" class="model-drawer">
+        <div class="drawer-header">
+            <div>
+                <h3>Choose Model Type</h3>
+                <p>Select how this skin should be displayed in 3D.</p>
+            </div>
+
+            <button type="button" id="closeDrawerBtn" class="drawer-close-button">×</button>
+        </div>
+
+        <div class="model-options">
+            <button type="button" class="model-option selected" data-model-choice="auto-detect">
+                <strong>Auto-detect</strong>
+                <span>Let the viewer decide between Classic and Slim.</span>
+            </button>
+
+            <button type="button" class="model-option" data-model-choice="default">
+                <strong>Classic</strong>
+                <span>Normal Minecraft arms, often called Steve/classic.</span>
+            </button>
+
+            <button type="button" class="model-option" data-model-choice="slim">
+                <strong>Slim</strong>
+                <span>Thinner arms, often called Alex/slim.</span>
+            </button>
+        </div>
+
+        <div class="drawer-summary">
+            Current choice: <strong id="modelChoiceSummary">Auto-detect</strong>
+        </div>
+
+        <button type="button" id="applyModelBtn" class="primary-button drawer-apply-button">
+            Apply Model
+        </button>
+    </aside>
+
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>
