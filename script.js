@@ -3,9 +3,7 @@ import * as skinview3d from "https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/+esm"
 console.log("Skin validation, saved preferences, model drawer and 3D viewer script loaded");
 
 const upload = document.getElementById("skinUpload");
-const preview = document.getElementById("skinPreview");
 const statusText = document.getElementById("uploadStatus");
-const emptyPreviewText = document.getElementById("emptyPreviewText");
 
 const fileNameText = document.getElementById("fileName");
 const fileDimensionsText = document.getElementById("fileDimensions");
@@ -134,9 +132,6 @@ upload.addEventListener("change", function () {
                 return;
             }
 
-            preview.src = event.target.result;
-            preview.style.display = "block";
-            emptyPreviewText.style.display = "none";
             generateSkinPalette(image);
 
             if (isModernSkin) {
@@ -914,15 +909,11 @@ function isValidHex(hex) {
 }
 
 function resetPreview() {
-    preview.src = "";
-    preview.style.display = "none";
-
-    emptyPreviewText.style.display = "block";
-
     fileNameText.textContent = "None";
     fileDimensionsText.textContent = "None";
     skinTypeText.textContent = "None";
     modelChoiceText.textContent = "None";
+
     pendingSkinDataUrl = null;
 
     editorSettings.skinPalette = [];
