@@ -36,6 +36,15 @@ const skinCanvasStatus = document.getElementById("skinCanvasStatus");
 const pixelInfo = document.getElementById("pixelInfo");
 const skinCanvasContext = skinCanvas.getContext("2d", { willReadFrequently: true });
 
+const toolButtons = document.querySelectorAll("[data-tool]");
+const activeToolStatus = document.getElementById("activeToolStatus");
+const toolMenu = document.getElementById("toolMenu");
+const toolMenuTitle = document.getElementById("toolMenuTitle");
+const toolMenuPath = document.getElementById("toolMenuPath");
+const toolMenuOptions = document.getElementById("toolMenuOptions");
+const toolMenuBackBtn = document.getElementById("toolMenuBackBtn");
+const toolMenuCloseBtn = document.getElementById("toolMenuCloseBtn");
+
 const preferencesKey = "mcSkinWorkshopViewerPreferences";
 
 const defaultPreferences = {
@@ -50,12 +59,14 @@ let skinViewer = null;
 let pendingSkinDataUrl = null;
 let pendingModelChoice = viewerPreferences.modelChoice;
 let outerLayerVisible = true;
+let activeTool = null;
+let toolMenuStack = [];
 
 setupSkinViewer();
 setupViewerControls();
 setupModelDrawer();
 setupLayerControls();
-setupSkinCanvas();
+setupEditorTools();
 applyPreferencesToInterface();
 
 upload.addEventListener("change", function () {
@@ -521,6 +532,247 @@ function rgbToHex(red, green, blue) {
         })
         .join("")
         .toUpperCase();
+}
+
+const editorToolMenus = {
+    bucket: {
+        title: "Bucket",
+        path: "Bucket",
+        description: "Choose how the fill tool should behave.",
+        options: [
+            {
+                label: "Connected Fill",
+                description: "Fill pixels connected to the clicked pixel."
+            },
+            {
+                label: "Replace Colour",
+                description: "Replace matching colours across the selected area."
+            },
+            {
+                label: "Fill Selected Part",
+                description: "Fill a chosen body part when selection tools exist."
+            }
+        ]
+    },
+
+    splice: {
+        title: "Splice",
+        path: "Splice",
+        description: "Choose a skin segment to work with.",
+        options: [
+            {
+                label: "Head",
+                description: "Select the head texture regions."
+            },
+            {
+                label: "Body",
+                description: "Select the torso texture regions."
+            },
+            {
+                label: "Left Arm",
+                description: "Select the left arm texture regions."
+            },
+            {
+                label: "Right Arm",
+                description: "Select the right arm texture regions."
+            },
+            {
+                label: "Left Leg",
+                description: "Select the left leg texture regions."
+            },
+            {
+                label: "Right Leg",
+                description: "Select the right leg texture regions."
+            },
+            {
+                label: "Secondary Layer",
+                description: "Select the outer layer regions."
+            },
+            {
+                label: "Custom Selection",
+                description: "Manual selection mode for advanced splicing."
+            }
+        ]
+    },
+
+    colourShade: {
+        title: "Colour & Shade",
+        path: "Colour & Shade",
+        description: "Choose what part of the skin should be adjusted.",
+        options: [
+            {
+                label: "Whole Skin",
+                description: "Adjust the entire skin."
+            },
+            {
+                label: "Selected Body Part",
+                description: "Choose a body part to recolour or shade.",
+                submenu: {
+                    title: "Choose Body Part",
+                    path: "Colour & Shade > Body Part",
+                    description: "Pick which part should receive the adjustment.",
+                    options: [
+                        {
+                            label: "Head",
+                            description: "Apply changes to the head."
+                        },
+                        {
+                            label: "Body",
+                            description: "Apply changes to the torso."
+                        },
+                        {
+                            label: "Left Arm",
+                            description: "Apply changes to the left arm."
+                        },
+                        {
+                            label: "Right Arm",
+                            description: "Apply changes to the right arm."
+                        },
+                        {
+                            label: "Left Leg",
+                            description: "Apply changes to the left leg."
+                        },
+                        {
+                            label: "Right Leg",
+                            description: "Apply changes to the right leg."
+                        }
+                    ]
+                }
+            },
+            {
+                label: "Current Colour Range",
+                description: "Adjust pixels similar to the chosen colour."
+            },
+            {
+                label: "Secondary Layer Only",
+                description: "Adjust only the outer layer pixels."
+            }
+        ]
+    }
+};
+
+function setupEditorTools() {
+    toolButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            const toolName = button.dataset.tool;
+
+            selectEditorTool(toolName);
+        });
+    });
+
+    toolMenuCloseBtn.addEventListener("click", closeToolMenu);
+
+    toolMenuBackBtn.addEventListener("click", function () {
+        if (toolMenuStack.length <= 1) return;
+
+        toolMenuStack.pop();
+        renderToolMenu();
+    });
+
+    closeToolMenu();
+}
+
+function selectEditorTool(toolName) {
+    activeTool = toolName;
+
+    toolButtons.forEach(function (button) {
+        if (button.dataset.tool === toolName) {
+            button.classList.add("active");
+        } else {
+            button.classList.remove("active");
+        }
+    });
+
+    const menu = editorToolMenus[toolName];
+
+    if (menu) {
+        activeToolStatus.textContent = `${getToolLabel(toolName)} selected. Choose an option.`;
+        openToolMenu(menu);
+        return;
+    }
+
+    closeToolMenu();
+
+    if (toolName === "undo" || toolName === "redo") {
+        activeToolStatus.textContent = `${getToolLabel(toolName)} is not connected yet.`;
+        return;
+    }
+
+    activeToolStatus.textContent = `${getToolLabel(toolName)} selected. Editing logic coming soon.`;
+}
+
+function openToolMenu(menu) {
+    toolMenuStack = [menu];
+
+    toolMenu.classList.add("open");
+    toolMenu.setAttribute("aria-hidden", "false");
+
+    renderToolMenu();
+}
+
+function closeToolMenu() {
+    toolMenu.classList.remove("open");
+    toolMenu.setAttribute("aria-hidden", "true");
+    toolMenuStack = [];
+}
+
+function renderToolMenu() {
+    const currentMenu = toolMenuStack[toolMenuStack.length - 1];
+
+    toolMenuTitle.textContent = currentMenu.title;
+    toolMenuPath.textContent = currentMenu.description || currentMenu.path;
+
+    toolMenuOptions.innerHTML = "";
+
+    if (toolMenuStack.length > 1) {
+        toolMenuBackBtn.classList.remove("hidden");
+    } else {
+        toolMenuBackBtn.classList.add("hidden");
+    }
+
+    currentMenu.options.forEach(function (option, index) {
+        const optionButton = document.createElement("button");
+
+        optionButton.type = "button";
+        optionButton.className = "tool-menu-option";
+
+        optionButton.innerHTML = `
+            <strong>${option.label}</strong>
+            <span>${option.description}</span>
+        `;
+
+        optionButton.addEventListener("click", function () {
+            if (option.submenu) {
+                toolMenuStack.push(option.submenu);
+                renderToolMenu();
+                return;
+            }
+
+            activeToolStatus.textContent = `${currentMenu.title}: ${option.label} selected. Tool logic coming soon.`;
+            closeToolMenu();
+        });
+
+        toolMenuOptions.appendChild(optionButton);
+
+        window.setTimeout(function () {
+            optionButton.classList.add("visible");
+        }, index * 55);
+    });
+}
+
+function getToolLabel(toolName) {
+    const labels = {
+        pencil: "Pencil",
+        eraser: "Eraser",
+        picker: "Picker",
+        bucket: "Bucket",
+        splice: "Splice",
+        colourShade: "Colour & Shade",
+        undo: "Undo",
+        redo: "Redo"
+    };
+
+    return labels[toolName] || toolName;
 }
 
 function resetPreview() {

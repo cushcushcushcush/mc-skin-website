@@ -26,6 +26,43 @@
             <p>Upload a Minecraft skin PNG to preview, inspect and view it in 3D.</p>
         </section>
 
+        <section class="editor-tools-card">
+    <div class="tools-heading">
+        <div>
+            <h3>Editor Tools</h3>
+            <p>Choose a tool. Some tools reveal extra options.</p>
+        </div>
+
+        <p id="activeToolStatus">No tool selected.</p>
+    </div>
+
+    <div class="editor-tool-rail">
+        <button type="button" class="editor-tool-button" data-tool="pencil">Pencil</button>
+        <button type="button" class="editor-tool-button" data-tool="eraser">Eraser</button>
+        <button type="button" class="editor-tool-button" data-tool="picker">Picker</button>
+        <button type="button" class="editor-tool-button" data-tool="bucket">Bucket</button>
+        <button type="button" class="editor-tool-button" data-tool="splice">Splice</button>
+        <button type="button" class="editor-tool-button" data-tool="colourShade">Colour & Shade</button>
+        <button type="button" class="editor-tool-button" data-tool="undo">Undo</button>
+        <button type="button" class="editor-tool-button" data-tool="redo">Redo</button>
+    </div>
+
+    <div id="toolMenu" class="tool-menu" aria-hidden="true">
+        <div class="tool-menu-header">
+            <button type="button" id="toolMenuBackBtn" class="tool-menu-small-button">←</button>
+
+            <div>
+                <h3 id="toolMenuTitle">Tool Options</h3>
+                <p id="toolMenuPath">Choose an option.</p>
+            </div>
+
+            <button type="button" id="toolMenuCloseBtn" class="tool-menu-small-button">×</button>
+        </div>
+
+        <div id="toolMenuOptions" class="tool-menu-options"></div>
+    </div>
+</section>
+
         <section class="tool-panel">
             <div class="upload-card">
                 <h3>Upload Skin</h3>
