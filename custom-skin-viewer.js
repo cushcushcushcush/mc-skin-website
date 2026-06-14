@@ -29,6 +29,9 @@ export class CustomSkinViewer {
 
         this.isPaintingPointer = false;
         this.activePointerId = null;
+        this.isNavigationPointer = false;
+        this.navigationPointerId = null;
+        this.cursorMode = "navigate";
         this.autoRotateBeforePaint = false;
 
         this.handleCanvasClick = this.handleCanvasClick.bind(this);
@@ -119,6 +122,7 @@ export class CustomSkinViewer {
         this.canvas.addEventListener("wheel", this.handleCanvasWheel, { passive: false });
         this.canvas.addEventListener("click", this.handleCanvasClick);
 
+        this.updateCanvasCursor();
         this.animate();
     }
 
@@ -254,28 +258,35 @@ export class CustomSkinViewer {
     }
 
     handleCanvasPointerDown(event) {
-        if (!this.shouldCapturePaintInteraction(event)) return;
+        if (this.shouldCapturePaintInteraction(event)) {
+            const hitInfo = this.getHitInfoFromEvent(event);
+            if (!hitInfo) return;
 
-        const hitInfo = this.getHitInfoFromEvent(event);
-        if (!hitInfo) return;
+            event.preventDefault();
+            event.stopPropagation();
 
-        event.preventDefault();
-        event.stopPropagation();
+            this.isPaintingPointer = true;
+            this.activePointerId = event.pointerId;
+            this.autoRotateBeforePaint = this.autoRotate;
+            this.autoRotate = false;
 
-        this.isPaintingPointer = true;
-        this.activePointerId = event.pointerId;
-        this.autoRotateBeforePaint = this.autoRotate;
-        this.autoRotate = false;
+            if (this.controls) {
+                this.controls.enabled = false;
+            }
 
-        if (this.controls) {
-            this.controls.enabled = false;
+            this.capturePointer(event.pointerId);
+            this.updateCanvasCursor();
+
+            this.emitModelPointerFromHit(hitInfo, "down", event);
+            return;
         }
 
-        if (this.canvas.setPointerCapture) {
-            this.canvas.setPointerCapture(event.pointerId);
+        if (event.button === 0 || event.button === 2) {
+            this.isNavigationPointer = true;
+            this.navigationPointerId = event.pointerId;
+            this.capturePointer(event.pointerId);
+            this.updateCanvasCursor();
         }
-
-        this.emitModelPointerFromHit(hitInfo, "down", event);
     }
 
     handleCanvasPointerMove(event) {
@@ -288,29 +299,37 @@ export class CustomSkinViewer {
     }
 
     handleCanvasPointerUp(event) {
-        if (!this.isPaintingPointer || event.pointerId !== this.activePointerId) return;
+        if (this.isPaintingPointer && event.pointerId === this.activePointerId) {
+            event.preventDefault();
+            event.stopPropagation();
 
-        event.preventDefault();
-        event.stopPropagation();
+            this.emitModelPointer(event, "up");
+            this.endPaintPointer(event);
+            return;
+        }
 
-        this.emitModelPointer(event, "up");
-        this.endPaintPointer(event);
+        if (this.isNavigationPointer && event.pointerId === this.navigationPointerId) {
+            this.endNavigationPointer(event);
+        }
     }
 
     handleCanvasPointerCancel(event) {
-        if (!this.isPaintingPointer || event.pointerId !== this.activePointerId) return;
+        if (this.isPaintingPointer && event.pointerId === this.activePointerId) {
+            event.preventDefault();
+            event.stopPropagation();
 
-        event.preventDefault();
-        event.stopPropagation();
+            this.emitModelPointer(event, "cancel");
+            this.endPaintPointer(event);
+            return;
+        }
 
-        this.emitModelPointer(event, "cancel");
-        this.endPaintPointer(event);
+        if (this.isNavigationPointer && event.pointerId === this.navigationPointerId) {
+            this.endNavigationPointer(event);
+        }
     }
 
     endPaintPointer(event) {
-        if (this.canvas.releasePointerCapture && this.canvas.hasPointerCapture?.(event.pointerId)) {
-            this.canvas.releasePointerCapture(event.pointerId);
-        }
+        this.releasePointer(event.pointerId);
 
         this.isPaintingPointer = false;
         this.activePointerId = null;
@@ -319,6 +338,48 @@ export class CustomSkinViewer {
         if (this.controls) {
             this.controls.enabled = true;
         }
+
+        this.updateCanvasCursor();
+    }
+
+    endNavigationPointer(event) {
+        this.releasePointer(event.pointerId);
+
+        this.isNavigationPointer = false;
+        this.navigationPointerId = null;
+
+        this.updateCanvasCursor();
+    }
+
+    capturePointer(pointerId) {
+        if (this.canvas.setPointerCapture) {
+            this.canvas.setPointerCapture(pointerId);
+        }
+    }
+
+    releasePointer(pointerId) {
+        if (this.canvas.releasePointerCapture && this.canvas.hasPointerCapture?.(pointerId)) {
+            this.canvas.releasePointerCapture(pointerId);
+        }
+    }
+
+    setCursorMode(mode) {
+        this.cursorMode = mode;
+        this.updateCanvasCursor();
+    }
+
+    updateCanvasCursor() {
+        if (this.isNavigationPointer) {
+            this.canvas.style.cursor = "grabbing";
+            return;
+        }
+
+        if (this.isPaintingPointer || this.cursorMode === "paint") {
+            this.canvas.style.cursor = "crosshair";
+            return;
+        }
+
+        this.canvas.style.cursor = "grab";
     }
 
     handleCanvasContextMenu(event) {

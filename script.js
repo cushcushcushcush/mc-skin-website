@@ -98,6 +98,8 @@ applyPreferencesToInterface();
 upload.addEventListener("change", function () {
     const file = this.files[0];
 
+    this.value = "";
+
     resetPreview();
 
     if (!file) {
@@ -220,6 +222,8 @@ function setupModelClickDetection() {
     };
 
     skinViewer.onModelPointer = handleModelPaintPointer;
+
+    updateViewerCursorMode();
 
     skinViewer.onModelClick = function (hitInfo) {
         if (!hitInfo || !hitInfo.skinPixel) return;
@@ -682,6 +686,7 @@ function selectEditorTool(toolName) {
     }
 
     activeTool = toolName;
+    updateViewerCursorMode();
     updateToolSettingsStatus();
 
     toolButtons.forEach(function (button) {
@@ -708,6 +713,7 @@ function selectEditorTool(toolName) {
 
 function clearActiveTool() {
     activeTool = null;
+    updateViewerCursorMode();
     closeToolMenu();
 
     toolButtons.forEach(function (button) {
@@ -716,6 +722,12 @@ function clearActiveTool() {
 
     activeToolStatus.textContent = "No tool selected.";
     updateToolSettingsStatus();
+}
+
+function updateViewerCursorMode() {
+    if (!skinViewer || typeof skinViewer.setCursorMode !== "function") return;
+
+    skinViewer.setCursorMode(isDirectEditTool(activeTool) ? "paint" : "navigate");
 }
 
 function openToolMenu(menu) {
