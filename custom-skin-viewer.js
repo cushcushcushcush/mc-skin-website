@@ -166,6 +166,24 @@ export class CustomSkinViewer {
     mesh.position.set(position[0], position[1], position[2]);
     mesh.userData.isOuterLayer = isOuterLayer;
 
+    mesh.userData.faceNames = [
+    "right",
+    "left",
+    "top",
+    "bottom",
+    "front",
+    "back"
+];
+
+    mesh.userData.faceRects = [
+    faces.right,
+    faces.left,
+    faces.top,
+    faces.bottom,
+    faces.front,
+    faces.back
+];
+
     const targetGroup = parentGroup || (isOuterLayer ? this.outerGroup : this.baseGroup);
     targetGroup.add(mesh);
 
@@ -235,26 +253,32 @@ createPivot(position, parentGroup) {
     const clickableMeshes = [];
 
     this.root.traverse(function (child) {
-        if (child.isMesh) {
-            clickableMeshes.push(child);
-        }
-    });
+    if (child.isMesh && isObjectVisibleInTree(child)) {
+        clickableMeshes.push(child);
+    }
+});
 
     const hits = this.raycaster.intersectObjects(clickableMeshes, false);
 
     if (!hits.length) return;
 
     const hit = hits[0];
-    const localNormal = hit.face.normal.clone().normalize();
+
+    const materialIndex = hit.face.materialIndex ?? 0;
+    const faceName = hit.object.userData.faceNames?.[materialIndex] || getFaceLabel(hit.face.normal.clone().normalize());
+    const faceRect = hit.object.userData.faceRects?.[materialIndex] || null;
+    const skinPixel = faceRect && hit.uv ? getSkinPixelFromUv(faceRect, hit.uv) : null;
 
     const hitInfo = {
-        part: getPartLabel(hit.object.name),
-        rawPart: hit.object.name,
-        layer: hit.object.userData.isOuterLayer ? "secondary layer" : "base layer",
-        face: getFaceLabel(localNormal),
-        uv: hit.uv ? hit.uv.clone() : null,
-        point: hit.point.clone()
-    };
+    part: getPartLabel(hit.object.name),
+    rawPart: hit.object.name,
+    layer: hit.object.userData.isOuterLayer ? "secondary layer" : "base layer",
+    face: faceName,
+    faceRect,
+    skinPixel,
+    uv: hit.uv ? hit.uv.clone() : null,
+    point: hit.point.clone()
+};
 
     if (typeof this.onModelClick === "function") {
         this.onModelClick(hitInfo);
@@ -332,6 +356,30 @@ function getFaceLabel(normal) {
     }
 
     return normal.z > 0 ? "front" : "back";
+}
+
+function getSkinPixelFromUv(rect, uv) {
+    const safeU = Math.min(Math.max(uv.x, 0), 0.999999);
+    const safeV = Math.min(Math.max(1 - uv.y, 0), 0.999999);
+
+    return {
+        x: rect.x + Math.floor(safeU * rect.w),
+        y: rect.y + Math.floor(safeV * rect.h)
+    };
+}
+
+function isObjectVisibleInTree(object) {
+    let currentObject = object;
+
+    while (currentObject) {
+        if (!currentObject.visible) {
+            return false;
+        }
+
+        currentObject = currentObject.parent;
+    }
+
+    return true;
 }
 
 function disposeObject(object) {

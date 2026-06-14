@@ -196,9 +196,12 @@ function setupModelClickDetection() {
 
     skinViewer.onModelClick = function (hitInfo) {
         const toolLabel = activeTool ? getToolLabel(activeTool) : "No tool";
+        const pixelText = hitInfo.skinPixel
+            ? ` | Pixel: ${hitInfo.skinPixel.x}, ${hitInfo.skinPixel.y}`
+            : "";
 
         activeToolStatus.textContent =
-            `${toolLabel} | Hit: ${hitInfo.part} ${hitInfo.face} (${hitInfo.layer})`;
+            `${toolLabel} | Hit: ${hitInfo.part} ${hitInfo.face} (${hitInfo.layer})${pixelText}`;
 
         console.log("3D model hit:", hitInfo);
     };
