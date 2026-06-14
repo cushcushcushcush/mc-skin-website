@@ -44,6 +44,9 @@ const brushSizeButtons = document.querySelectorAll("[data-brush-size]");
 const recentColoursContainer = document.getElementById("recentColours");
 const skinPaletteContainer = document.getElementById("skinPalette");
 const toolSettingsStatus = document.getElementById("toolSettingsStatus");
+const editorIntro = document.getElementById("editorIntro");
+const editorIntroLine = document.getElementById("editorIntroLine");
+const skipIntroBtn = document.getElementById("skipIntroBtn");
 
 const preferencesKey = "mcSkinWorkshopViewerPreferences";
 
@@ -93,6 +96,7 @@ setupModelDrawer();
 setupLayerControls();
 setupEditorTools();
 setupEditorSettings();
+setupEditorIntro();
 applyPreferencesToInterface();
 
 upload.addEventListener("change", function () {
@@ -169,6 +173,7 @@ upload.addEventListener("change", function () {
             modelChoiceText.textContent = "Waiting for choice";
 
             updateViewerStatus("Choose a model type to update the 3D viewer.", true);
+            hideEditorIntro();
             openModelDrawer();
         };
 
@@ -843,6 +848,38 @@ function setupEditorSettings() {
         });
     });
 
+}
+
+function setupEditorIntro() {
+    if (!editorIntro) return;
+
+    const introLines = [
+        "What's on the agenda today?",
+        "What's cookin', good lookin'?",
+        "Skinning people, a happy hobby.",
+        "Some people man, I tell yo- ..oh, hey there!",
+        "Lookin' fly! Or soon will be...",
+        "Do people even read thes- How original.",
+        "What are you looking at?",
+        "Everyone's a critic. Especially you. Punk.",
+        "You get skinned, I get skinned, we all get skinned!",
+    ];
+
+    const randomLine = introLines[Math.floor(Math.random() * introLines.length)];
+
+    if (editorIntroLine) {
+        editorIntroLine.textContent = randomLine;
+    }
+
+    if (skipIntroBtn) {
+        skipIntroBtn.addEventListener("click", hideEditorIntro);
+    }
+}
+
+function hideEditorIntro() {
+    if (!editorIntro) return;
+
+    editorIntro.classList.add("hidden");
 }
 
 function applyHexInput() {

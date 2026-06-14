@@ -196,6 +196,9 @@ export class CustomSkinViewer {
         const slim = this.modelType === "slim";
         const armWidth = slim ? 3 : 4;
         const armOffset = 4 + armWidth / 2;
+        const outerArmWidth = armWidth + 0.5;
+        const outerArmOffset = 4.25 + outerArmWidth / 2;
+        const outerLegOffset = 2.25;
         const parts = getSkinParts(slim);
 
         this.body = this.createPart("body", 8, 12, 4, parts.body.base, [0, 18, 0], false);
@@ -208,18 +211,18 @@ export class CustomSkinViewer {
         this.rightLegPivot = this.createPivot([-2, 12, 0], this.baseGroup);
         this.leftLegPivot = this.createPivot([2, 12, 0], this.baseGroup);
 
-        this.outerRightArmPivot = this.createPivot([-armOffset, 24, 0], this.outerGroup);
-        this.outerLeftArmPivot = this.createPivot([armOffset, 24, 0], this.outerGroup);
-        this.outerRightLegPivot = this.createPivot([-2, 12, 0], this.outerGroup);
-        this.outerLeftLegPivot = this.createPivot([2, 12, 0], this.outerGroup);
+        this.outerRightArmPivot = this.createPivot([-outerArmOffset, 24, 0], this.outerGroup);
+        this.outerLeftArmPivot = this.createPivot([outerArmOffset, 24, 0], this.outerGroup);
+        this.outerRightLegPivot = this.createPivot([-outerLegOffset, 12, 0], this.outerGroup);
+        this.outerLeftLegPivot = this.createPivot([outerLegOffset, 12, 0], this.outerGroup);
 
         this.rightArm = this.createPart("rightArm", armWidth, 12, 4, parts.rightArm.base, [0, -6, 0], false, this.rightArmPivot);
         this.leftArm = this.createPart("leftArm", armWidth, 12, 4, parts.leftArm.base, [0, -6, 0], false, this.leftArmPivot);
         this.rightLeg = this.createPart("rightLeg", 4, 12, 4, parts.rightLeg.base, [0, -6, 0], false, this.rightLegPivot);
         this.leftLeg = this.createPart("leftLeg", 4, 12, 4, parts.leftLeg.base, [0, -6, 0], false, this.leftLegPivot);
 
-        this.outerRightArm = this.createPart("outerRightArm", armWidth + 0.5, 12.5, 4.5, parts.rightArm.outer, [0, -6.25, 0], true, this.outerRightArmPivot);
-        this.outerLeftArm = this.createPart("outerLeftArm", armWidth + 0.5, 12.5, 4.5, parts.leftArm.outer, [0, -6.25, 0], true, this.outerLeftArmPivot);
+        this.outerRightArm = this.createPart("outerRightArm", outerArmWidth, 12.5, 4.5, parts.rightArm.outer, [0, -6.25, 0], true, this.outerRightArmPivot);
+        this.outerLeftArm = this.createPart("outerLeftArm", outerArmWidth, 12.5, 4.5, parts.leftArm.outer, [0, -6.25, 0], true, this.outerLeftArmPivot);
         this.outerRightLeg = this.createPart("outerRightLeg", 4.5, 12.5, 4.5, parts.rightLeg.outer, [0, -6.25, 0], true, this.outerRightLegPivot);
         this.outerLeftLeg = this.createPart("outerLeftLeg", 4.5, 12.5, 4.5, parts.leftLeg.outer, [0, -6.25, 0], true, this.outerLeftLegPivot);
     }

@@ -21,6 +21,33 @@
     </header>
 
     <main class="editor-app-shell">
+        <section id="editorIntro" class="editor-intro" aria-label="Editor start panel">
+    <div class="editor-intro-card">
+        <p id="editorIntroLine" class="editor-intro-line">What's on the agenda today?</p>
+
+        <h2>Start your skin</h2>
+
+        <p class="editor-intro-copy">
+            Upload a Minecraft skin to begin editing!
+        </p>
+
+        <label for="skinUpload" class="editor-intro-upload">
+            <span class="intro-upload-icon">⬆</span>
+            <strong>Choose a skin</strong>
+            <small>64×64 or 64×32 Minecraft skin</small>
+        </label>
+
+        <div class="editor-intro-actions">
+            <label for="skinUpload" class="intro-primary-action">
+                Upload Skin
+            </label>
+
+            <button type="button" id="skipIntroBtn" class="intro-secondary-action">
+                Continue to Editor
+            </button>
+        </div>
+    </div>
+</section>
         <section class="editor-app-layout">
 
             <aside class="editor-left-rail">
