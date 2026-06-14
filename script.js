@@ -1,6 +1,6 @@
-import * as skinview3d from "https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/+esm";
+import { CustomSkinViewer, WalkingAnimation } from "./custom-skin-viewer.js";
 
-console.log("Skin validation, saved preferences, model drawer and 3D viewer script loaded");
+console.log("Skin validation, saved preferences, model drawer and custom 3D viewer script loaded");
 
 const upload = document.getElementById("skinUpload");
 const statusText = document.getElementById("uploadStatus");
@@ -163,22 +163,22 @@ upload.addEventListener("change", function () {
 
 function setupSkinViewer() {
     try {
-        skinViewer = new skinview3d.SkinViewer({
+        skinViewer = new CustomSkinViewer({
             canvas: skin3dCanvas,
-            width: 300,
-            height: 400
+            width: 520,
+            height: 650
         });
 
         skinViewer.background = 0x1F2233;
         skinViewer.fov = 50;
         skinViewer.zoom = 0.85;
 
-        skinViewer.animation = new skinview3d.WalkingAnimation();
+        skinViewer.animation = new WalkingAnimation();
 
         if (skinViewer.controls) {
             skinViewer.controls.enableRotate = true;
             skinViewer.controls.enableZoom = true;
-            skinViewer.controls.enablePan = false;
+            skinViewer.controls.enablePan = true;
         }
 
         applyPreferencesToViewer();
@@ -379,6 +379,10 @@ function showPreferencesSavedMessage(customMessage = "Viewer preferences saved o
 
 function getActiveViewerModel() {
     try {
+        if (skinViewer && skinViewer.modelType) {
+            return skinViewer.modelType;
+        }
+
         return skinViewer.playerObject.skin.modelType;
     } catch (error) {
         console.warn("Could not read active model type:", error);
@@ -422,7 +426,14 @@ function setupLayerControls() {
 }
 
 function applyLayerVisibilityToViewer() {
-    if (!skinViewer || !skinViewer.playerObject || !skinViewer.playerObject.skin) return;
+    if (!skinViewer) return;
+
+    if (typeof skinViewer.setOuterLayerVisible === "function") {
+        skinViewer.setOuterLayerVisible(outerLayerVisible);
+        return;
+    }
+
+    if (!skinViewer.playerObject || !skinViewer.playerObject.skin) return;
 
     const skin = skinViewer.playerObject.skin;
 
