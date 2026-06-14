@@ -20,6 +20,11 @@ export class CustomSkinViewer {
         this.animation = new WalkingAnimation();
         this.playerObject = { skin: { modelType: this.modelType } };
 
+        this.pointer = new THREE.Vector2();
+        this.raycaster = new THREE.Raycaster();
+        this.onModelClick = null;
+        this.handleCanvasClick = this.handleCanvasClick.bind(this);
+
         this.skinCanvas = document.createElement("canvas");
         this.skinCanvas.width = SKIN_SIZE;
         this.skinCanvas.height = SKIN_SIZE;
@@ -68,6 +73,8 @@ export class CustomSkinViewer {
         this.animate = this.animate.bind(this);
 
         window.addEventListener("resize", this.resizeToCanvas);
+        this.canvas.addEventListener("click", this.handleCanvasClick);
+
         this.animate();
     }
 
@@ -215,6 +222,45 @@ createPivot(position, parentGroup) {
         this.controls.update();
     }
 
+    handleCanvasClick(event) {
+    const rect = this.canvas.getBoundingClientRect();
+
+    if (!rect.width || !rect.height) return;
+
+    this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+
+    const clickableMeshes = [];
+
+    this.root.traverse(function (child) {
+        if (child.isMesh) {
+            clickableMeshes.push(child);
+        }
+    });
+
+    const hits = this.raycaster.intersectObjects(clickableMeshes, false);
+
+    if (!hits.length) return;
+
+    const hit = hits[0];
+    const localNormal = hit.face.normal.clone().normalize();
+
+    const hitInfo = {
+        part: getPartLabel(hit.object.name),
+        rawPart: hit.object.name,
+        layer: hit.object.userData.isOuterLayer ? "secondary layer" : "base layer",
+        face: getFaceLabel(localNormal),
+        uv: hit.uv ? hit.uv.clone() : null,
+        point: hit.point.clone()
+    };
+
+    if (typeof this.onModelClick === "function") {
+        this.onModelClick(hitInfo);
+    }
+}
+
     resizeToCanvas() {
         const cssWidth = this.canvas.clientWidth || this.width;
         const cssHeight = this.canvas.clientHeight || this.height;
@@ -262,6 +308,30 @@ createPivot(position, parentGroup) {
             disposeObject(child);
         }
     }
+}
+
+function getPartLabel(rawName) {
+    const withoutOuter = rawName.replace(/^outer/, "");
+    return withoutOuter
+        .replace(/([A-Z])/g, " $1")
+        .trim()
+        .toLowerCase();
+}
+
+function getFaceLabel(normal) {
+    const absX = Math.abs(normal.x);
+    const absY = Math.abs(normal.y);
+    const absZ = Math.abs(normal.z);
+
+    if (absX >= absY && absX >= absZ) {
+        return normal.x > 0 ? "right" : "left";
+    }
+
+    if (absY >= absX && absY >= absZ) {
+        return normal.y > 0 ? "top" : "bottom";
+    }
+
+    return normal.z > 0 ? "front" : "back";
 }
 
 function disposeObject(object) {

@@ -182,12 +182,26 @@ function setupSkinViewer() {
         }
 
         applyPreferencesToViewer();
+        setupModelClickDetection();
 
         updateViewerStatus("3D viewer ready. Upload a skin to begin.", true);
     } catch (error) {
         console.error("3D viewer failed to start:", error);
         updateViewerStatus("3D viewer failed to start. Check the browser console.", false);
     }
+}
+
+function setupModelClickDetection() {
+    if (!skinViewer) return;
+
+    skinViewer.onModelClick = function (hitInfo) {
+        const toolLabel = activeTool ? getToolLabel(activeTool) : "No tool";
+
+        activeToolStatus.textContent =
+            `${toolLabel} | Hit: ${hitInfo.part} ${hitInfo.face} (${hitInfo.layer})`;
+
+        console.log("3D model hit:", hitInfo);
+    };
 }
 
 function setupViewerControls() {
