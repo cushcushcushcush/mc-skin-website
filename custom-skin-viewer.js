@@ -47,7 +47,7 @@ export class CustomSkinViewer {
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.target.set(0, 16, 0);
+        this.controls.target.set(0, 18, 0);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.08;
         this.controls.enablePan = true;
@@ -93,7 +93,7 @@ export class CustomSkinViewer {
         this.controls.update();
     }
 
-    async loadSkin(skinDataUrl, { model = "auto-detect" } = {}) {
+    async loadSkin(skinDataUrl, { model = "auto-detect", preserveView = false } = {}) {
         await this.drawSkinToHiddenCanvas(skinDataUrl);
 
         this.modelType = model === "slim" ? "slim" : "default";
@@ -101,7 +101,10 @@ export class CustomSkinViewer {
 
         this.rebuildPlayerModel();
         this.setOuterLayerVisible(this.outerGroup.visible);
-        this.resetCameraPose();
+
+        if (!preserveView) {
+            this.resetCameraPose();
+        }
     }
 
     async drawSkinToHiddenCanvas(skinDataUrl) {

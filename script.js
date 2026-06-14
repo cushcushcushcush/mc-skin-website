@@ -54,6 +54,13 @@ const defaultPreferences = {
     walkSpeed: 0.7
 };
 
+const skinTextureCanvas = document.createElement("canvas");
+const skinTextureContext = skinTextureCanvas.getContext("2d", { willReadFrequently: true });
+
+let activeSkinDataUrl = null;
+let activeSkinImageWidth = 0;
+let activeSkinImageHeight = 0;
+
 let viewerPreferences = loadViewerPreferences();
 let skinViewer = null;
 let pendingSkinDataUrl = null;
@@ -70,6 +77,8 @@ let editorSettings = {
 };
 
 setupSkinViewer();
+setupSkinTextureBuffer();
+setupModelClickDetection();
 setupViewerControls();
 setupModelDrawer();
 setupLayerControls();
@@ -141,7 +150,10 @@ upload.addEventListener("change", function () {
                 showSuccess("Valid legacy 64x32 Minecraft skin loaded.");
             }
 
-            pendingSkinDataUrl = event.target.result;
+            loadSkinIntoTextureBuffer(image);
+
+
+            pendingSkinDataUrl = activeSkinDataUrl;
             selectModelChoice(viewerPreferences.modelChoice);
             modelChoiceText.textContent = "Waiting for choice";
 
@@ -182,7 +194,6 @@ function setupSkinViewer() {
         }
 
         applyPreferencesToViewer();
-        setupModelClickDetection();
 
         updateViewerStatus("3D viewer ready. Upload a skin to begin.", true);
     } catch (error) {
@@ -195,10 +206,28 @@ function setupModelClickDetection() {
     if (!skinViewer) return;
 
     skinViewer.onModelClick = function (hitInfo) {
+        if (!hitInfo.skinPixel) return;
+
+        if (activeTool === "pencil") {
+            const didPaint = paintTexturePixel(
+                hitInfo.skinPixel.x,
+                hitInfo.skinPixel.y,
+                editorSettings.selectedColour
+            );
+
+            if (didPaint) {
+                refreshSkinViewerFromTextureBuffer();
+
+                activeToolStatus.textContent =
+                    `Pencil | Painted pixel ${hitInfo.skinPixel.x}, ${hitInfo.skinPixel.y} with ${editorSettings.selectedColour}`;
+
+                console.log("Painted pixel:", hitInfo.skinPixel);
+                return;
+            }
+        }
+
         const toolLabel = activeTool ? getToolLabel(activeTool) : "No tool";
-        const pixelText = hitInfo.skinPixel
-            ? ` | Pixel: ${hitInfo.skinPixel.x}, ${hitInfo.skinPixel.y}`
-            : "";
+        const pixelText = ` | Pixel: ${hitInfo.skinPixel.x}, ${hitInfo.skinPixel.y}`;
 
         activeToolStatus.textContent =
             `${toolLabel} | Hit: ${hitInfo.part} ${hitInfo.face} (${hitInfo.layer})${pixelText}`;
@@ -303,15 +332,22 @@ function selectModelChoice(choice) {
     modelChoiceSummary.textContent = getModelLabel(choice);
 }
 
-async function loadSkinInto3DViewer(skinDataUrl, modelChoice) {
+async function loadSkinInto3DViewer(skinDataUrl, modelChoice, options = {}) {
+    const preserveView = options.preserveView ?? false;
     if (!skinViewer) {
         updateViewerStatus("3D viewer is not available.", false);
         return;
     }
 
+    if (!skinDataUrl) {
+        updateViewerStatus("No skin data available for the 3D viewer.", false);
+        return;
+    }
+
     try {
         await skinViewer.loadSkin(skinDataUrl, {
-            model: modelChoice
+            model: modelChoice,
+            preserveView: preserveView
         });
 
         applyPreferencesToViewer();
@@ -929,6 +965,62 @@ function isValidHex(hex) {
     return /^#?[0-9A-Fa-f]{6}$/.test(hex.trim());
 }
 
+function loadSkinIntoTextureBuffer(image) {
+    activeSkinImageWidth = image.width;
+    activeSkinImageHeight = image.height;
+
+    skinTextureCanvas.width = image.width;
+    skinTextureCanvas.height = image.height;
+
+    skinTextureContext.imageSmoothingEnabled = false;
+    skinTextureContext.clearRect(0, 0, image.width, image.height);
+    skinTextureContext.drawImage(image, 0, 0);
+
+    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+}
+
+function setupSkinTextureBuffer() {
+    skinTextureCanvas.width = 64;
+    skinTextureCanvas.height = 64;
+    skinTextureContext.imageSmoothingEnabled = false;
+}
+
+function paintTexturePixel(x, y, hexColour) {
+    if (!activeSkinDataUrl) return false;
+    if (x < 0 || y < 0 || x >= skinTextureCanvas.width || y >= skinTextureCanvas.height) return false;
+
+    const rgb = hexToRgb(hexColour);
+    if (!rgb) return false;
+
+    skinTextureContext.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`;
+    skinTextureContext.fillRect(x, y, 1, 1);
+
+    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+    return true;
+}
+
+function hexToRgb(hex) {
+    const normalised = normaliseHex(hex).replace("#", "");
+
+    if (!/^[0-9A-F]{6}$/i.test(normalised)) {
+        return null;
+    }
+
+    return {
+        r: parseInt(normalised.slice(0, 2), 16),
+        g: parseInt(normalised.slice(2, 4), 16),
+        b: parseInt(normalised.slice(4, 6), 16)
+    };
+}
+
+function refreshSkinViewerFromTextureBuffer() {
+    if (!activeSkinDataUrl) return;
+
+    loadSkinInto3DViewer(activeSkinDataUrl, viewerPreferences.modelChoice, {
+        preserveView: true
+    });
+}
+
 function resetPreview() {
     fileNameText.textContent = "None";
     fileDimensionsText.textContent = "None";
@@ -940,6 +1032,15 @@ function resetPreview() {
     editorSettings.skinPalette = [];
     renderSkinPalette();
     updateToolSettingsStatus();
+
+    activeSkinDataUrl = null;
+    activeSkinImageWidth = 0;
+    activeSkinImageHeight = 0;
+
+    skinTextureCanvas.width = 64;
+    skinTextureCanvas.height = 64;
+    skinTextureContext.imageSmoothingEnabled = false;
+    skinTextureContext.clearRect(0, 0, 64, 64);
 }
 
 function showError(message) {
