@@ -47,6 +47,10 @@ const toolSettingsStatus = document.getElementById("toolSettingsStatus");
 const editorIntro = document.getElementById("editorIntro");
 const editorIntroLine = document.getElementById("editorIntroLine");
 const skipIntroBtn = document.getElementById("skipIntroBtn");
+const editorAppShell = document.querySelector(".editor-app-shell");
+const introUploadCard = document.querySelector(".editor-intro-upload");
+const modelChoiceLead = document.getElementById("modelChoiceLead");
+const modelChoiceConfirm = document.getElementById("modelChoiceConfirm");
 
 const preferencesKey = "mcSkinWorkshopViewerPreferences";
 
@@ -104,6 +108,10 @@ upload.addEventListener("change", function () {
 
     this.value = "";
 
+    handleSkinUploadFile(file);
+});
+
+function handleSkinUploadFile(file) {
     resetPreview();
 
     if (!file) {
@@ -167,14 +175,17 @@ upload.addEventListener("change", function () {
 
             loadSkinIntoTextureBuffer(image);
 
-
             pendingSkinDataUrl = activeSkinDataUrl;
             selectModelChoice(viewerPreferences.modelChoice);
             modelChoiceText.textContent = "Waiting for choice";
 
             updateViewerStatus("Choose a model type to update the 3D viewer.", true);
-            hideEditorIntro();
-            openModelDrawer();
+
+            const modelLeadText = isModernSkin
+                ? "Looks like a modern 64×64 skin. Your say, though:"
+                : "Looks like a legacy 64×32 skin. Your say, though:";
+
+            showModelChoiceStep(modelLeadText);
         };
 
         image.onerror = function () {
@@ -187,7 +198,7 @@ upload.addEventListener("change", function () {
     };
 
     reader.readAsDataURL(file);
-});
+}
 
 function setupSkinViewer() {
     try {
@@ -299,30 +310,38 @@ function setupModelDrawer() {
         });
     });
 
-    applyModelBtn.addEventListener("click", async function () {
-        if (!pendingSkinDataUrl) {
-            updateViewerStatus("Upload a valid skin before choosing a model.", false);
-            return;
-        }
+    if (applyModelBtn) {
+        applyModelBtn.addEventListener("click", async function () {
+            if (!pendingSkinDataUrl) {
+                updateViewerStatus("Upload a valid skin before choosing a model.", false);
+                return;
+            }
 
-        viewerPreferences.modelChoice = pendingModelChoice;
-        saveViewerPreferences();
+            viewerPreferences.modelChoice = pendingModelChoice;
+            saveViewerPreferences();
 
-        applyModelBtn.disabled = true;
-        applyModelBtn.textContent = "Applying...";
+            applyModelBtn.disabled = true;
+            applyModelBtn.textContent = "Applying...";
 
-        await loadSkinInto3DViewer(pendingSkinDataUrl, pendingModelChoice);
+            const didLoadSkin = await loadSkinInto3DViewer(pendingSkinDataUrl, pendingModelChoice);
 
-        applyModelBtn.disabled = false;
-        applyModelBtn.textContent = "Apply Model";
+            applyModelBtn.disabled = false;
+            applyModelBtn.textContent = "Use This Model";
 
-        closeModelDrawer();
-        applyPreferencesToInterface();
-        showPreferencesSavedMessage();
-    });
+            if (!didLoadSkin) {
+                return;
+            }
 
-    closeDrawerBtn.addEventListener("click", closeModelDrawer);
-    drawerOverlay.addEventListener("click", closeModelDrawer);
+            showModelChoiceConfirmation();
+
+            window.setTimeout(function () {
+                closeModelDrawer();
+                revealEditorLayout();
+                applyPreferencesToInterface();
+                showPreferencesSavedMessage();
+            }, 620);
+        });
+    }
 }
 
 function selectModelChoice(choice) {
@@ -344,12 +363,12 @@ async function loadSkinInto3DViewer(skinDataUrl, modelChoice, options = {}) {
 
     if (!skinViewer) {
         updateViewerStatus("3D viewer is not available.", false);
-        return;
+        return false;
     }
 
     if (!activeSkinDataUrl || !skinTextureCanvas.width || !skinTextureCanvas.height) {
         updateViewerStatus("No skin texture is available for the 3D viewer.", false);
-        return;
+        return false;
     }
 
     try {
@@ -378,9 +397,12 @@ async function loadSkinInto3DViewer(skinDataUrl, modelChoice, options = {}) {
             modelChoiceText.textContent = getModelLabel(modelChoice);
             updateViewerStatus(`3D skin loaded as ${getModelLabel(modelChoice)}.`, true);
         }
+
+        return true;
     } catch (error) {
         console.error("Could not load skin into 3D viewer:", error);
         updateViewerStatus("Could not load this skin into the 3D viewer.", false);
+        return false;
     }
 }
 
@@ -467,13 +489,27 @@ function getModelLabel(modelChoice) {
 }
 
 function openModelDrawer() {
-    drawerOverlay.classList.add("open");
-    modelDrawer.classList.add("open");
+    if (drawerOverlay) {
+        drawerOverlay.classList.add("open");
+        drawerOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    if (modelDrawer) {
+        modelDrawer.classList.add("open");
+        modelDrawer.setAttribute("aria-hidden", "false");
+    }
 }
 
 function closeModelDrawer() {
-    drawerOverlay.classList.remove("open");
-    modelDrawer.classList.remove("open");
+    if (drawerOverlay) {
+        drawerOverlay.classList.remove("open");
+        drawerOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    if (modelDrawer) {
+        modelDrawer.classList.remove("open");
+        modelDrawer.setAttribute("aria-hidden", "true");
+    }
 }
 
 function setupLayerControls() {
@@ -863,6 +899,12 @@ function setupEditorIntro() {
         "What are you looking at?",
         "Everyone's a critic. Especially you. Punk.",
         "You get skinned, I get skinned, we all get skinned!",
+        "64 pixels of pure responsibility.",
+        "Now with sleeves!",
+        "Designer drip, cube edition.",
+        "Do not eat the texture.",
+        "Outer layer privileges granted.",
+        "Freshly rendered."
     ];
 
     const randomLine = introLines[Math.floor(Math.random() * introLines.length)];
@@ -872,14 +914,78 @@ function setupEditorIntro() {
     }
 
     if (skipIntroBtn) {
-        skipIntroBtn.addEventListener("click", hideEditorIntro);
+        skipIntroBtn.addEventListener("click", finishIntroWithoutSkin);
     }
+
+    setupIntroUploadDropZone();
+}
+
+function setupIntroUploadDropZone() {
+    if (!introUploadCard) return;
+
+    ["dragenter", "dragover"].forEach(function (eventName) {
+        introUploadCard.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            introUploadCard.classList.add("drag-over");
+        });
+    });
+
+    ["dragleave", "drop"].forEach(function (eventName) {
+        introUploadCard.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            introUploadCard.classList.remove("drag-over");
+        });
+    });
+
+    introUploadCard.addEventListener("drop", function (event) {
+        const file = event.dataTransfer && event.dataTransfer.files
+            ? event.dataTransfer.files[0]
+            : null;
+
+        handleSkinUploadFile(file);
+    });
 }
 
 function hideEditorIntro() {
     if (!editorIntro) return;
 
     editorIntro.classList.add("hidden");
+}
+
+function finishIntroWithoutSkin() {
+    hideEditorIntro();
+    revealEditorLayout();
+}
+
+function showModelChoiceStep(message) {
+    if (modelChoiceLead) {
+        modelChoiceLead.textContent = message;
+    }
+
+    if (modelChoiceConfirm) {
+        modelChoiceConfirm.textContent = "";
+        modelChoiceConfirm.classList.remove("visible");
+    }
+
+    hideEditorIntro();
+
+    window.setTimeout(function () {
+        openModelDrawer();
+    }, 260);
+}
+
+function showModelChoiceConfirmation() {
+    if (!modelChoiceConfirm) return;
+
+    modelChoiceConfirm.textContent = "Got it! ^_^";
+    modelChoiceConfirm.classList.add("visible");
+}
+
+function revealEditorLayout() {
+    if (!editorAppShell) return;
+
+    editorAppShell.classList.remove("editor-flow-pending");
+    editorAppShell.classList.add("editor-ready");
 }
 
 function applyHexInput() {

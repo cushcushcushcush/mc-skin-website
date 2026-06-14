@@ -20,34 +20,31 @@
         </nav>
     </header>
 
-    <main class="editor-app-shell">
+    <main class="editor-app-shell editor-flow-pending">
         <section id="editorIntro" class="editor-intro" aria-label="Editor start panel">
-    <div class="editor-intro-card">
-        <p id="editorIntroLine" class="editor-intro-line">What's on the agenda today?</p>
+            <div class="editor-intro-card">
+                <p id="editorIntroLine" class="editor-intro-line">What's on the agenda today?</p>
 
-        <h2>Start your skin</h2>
+                <h2>Start your skin</h2>
 
-        <p class="editor-intro-copy">
-            Upload a Minecraft skin to begin editing!
-        </p>
+                <p class="editor-intro-copy">
+                    Upload a Minecraft skin to begin editing.
+                </p>
 
-        <label for="skinUpload" class="editor-intro-upload">
-            <span class="intro-upload-icon">⬆</span>
-            <strong>Choose a skin</strong>
-            <small>64×64 or 64×32 Minecraft skin</small>
-        </label>
+                <label for="skinUpload" class="editor-intro-upload">
+                    <span class="intro-upload-icon">⬆</span>
+                    <strong>Choose a skin</strong>
+                    <small>Click here or drop a 64×64 / 64×32 PNG</small>
+                </label>
 
-        <div class="editor-intro-actions">
-            <label for="skinUpload" class="intro-primary-action">
-                Upload Skin
-            </label>
+                <div class="editor-intro-actions">
+                    <button type="button" id="skipIntroBtn" class="intro-secondary-action">
+                        Continue to Editor
+                    </button>
+                </div>
+            </div>
+        </section>
 
-            <button type="button" id="skipIntroBtn" class="intro-secondary-action">
-                Continue to Editor
-            </button>
-        </div>
-    </div>
-</section>
         <section class="editor-app-layout">
 
             <aside class="editor-left-rail">
@@ -234,28 +231,26 @@
 </aside>
         </section>
     </main>
+    <div id="drawerOverlay" class="model-flow-overlay" aria-hidden="true"></div>
 
-    <div id="drawerOverlay" class="drawer-overlay"></div>
+    <aside id="modelDrawer" class="model-choice-panel" aria-hidden="true">
+        <p class="model-choice-kicker">Skin loaded</p>
 
-    <aside id="modelDrawer" class="model-drawer">
-        <div class="drawer-header">
-            <div>
-                <h3>Choose Model Type</h3>
-                <p>Select how this skin should be displayed in 3D.</p>
-            </div>
+        <h2>Choose your model</h2>
 
-            <button type="button" id="closeDrawerBtn" class="drawer-close-button">×</button>
-        </div>
+        <p id="modelChoiceLead" class="model-choice-copy">
+            Choose how this skin should be shaped in the editor.
+        </p>
 
         <div class="model-options">
             <button type="button" class="model-option selected" data-model-choice="auto-detect">
-                <strong>Auto-detect</strong>
-                <span>Let the viewer decide between Classic and Slim.</span>
+                <strong>Auto Detect</strong>
+                <span>Let the editor make its best guess.</span>
             </button>
 
             <button type="button" class="model-option" data-model-choice="default">
                 <strong>Classic</strong>
-                <span>Normal Minecraft arms, often called Steve/classic.</span>
+                <span>Standard Minecraft arms, often called Steve/classic.</span>
             </button>
 
             <button type="button" class="model-option" data-model-choice="slim">
@@ -264,13 +259,15 @@
             </button>
         </div>
 
-        <div class="drawer-summary">
-            Current choice: <strong id="modelChoiceSummary">Auto-detect</strong>
+        <div class="model-choice-summary">
+            Current choice: <strong id="modelChoiceSummary">Auto Detect</strong>
         </div>
 
-        <button type="button" id="applyModelBtn" class="primary-button drawer-apply-button">
-            Apply Model
+        <button type="button" id="applyModelBtn" class="primary-button model-apply-button">
+            Use This Model
         </button>
+
+        <p id="modelChoiceConfirm" class="model-choice-confirm" aria-live="polite"></p>
     </aside>
 
     <script type="module" src="script.js"></script>
