@@ -69,6 +69,15 @@ let outerLayerVisible = true;
 let activeTool = null;
 let toolMenuStack = [];
 
+let isPaintStrokeActive = false;
+let lastPaintedPixelKey = null;
+let strokeBeforeDataUrl = null;
+let undoStack = [];
+let redoStack = [];
+let viewerRefreshQueued = false;
+
+const maxHistorySteps = 50;
+
 let editorSettings = {
     selectedColour: "#7CFF9B",
     brushSize: 1,
@@ -202,29 +211,18 @@ function setupSkinViewer() {
     }
 }
 
+
 function setupModelClickDetection() {
     if (!skinViewer) return;
 
+    skinViewer.shouldUsePaintInteraction = function (event) {
+        return isDirectEditTool(activeTool) && isLeftPaintEvent(event);
+    };
+
+    skinViewer.onModelPointer = handleModelPaintPointer;
+
     skinViewer.onModelClick = function (hitInfo) {
-        if (!hitInfo.skinPixel) return;
-
-        if (activeTool === "pencil") {
-            const didPaint = paintTexturePixel(
-                hitInfo.skinPixel.x,
-                hitInfo.skinPixel.y,
-                editorSettings.selectedColour
-            );
-
-            if (didPaint) {
-                refreshSkinViewerFromTextureBuffer();
-
-                activeToolStatus.textContent =
-                    `Pencil | Painted pixel ${hitInfo.skinPixel.x}, ${hitInfo.skinPixel.y} with ${editorSettings.selectedColour}`;
-
-                console.log("Painted pixel:", hitInfo.skinPixel);
-                return;
-            }
-        }
+        if (!hitInfo || !hitInfo.skinPixel) return;
 
         const toolLabel = activeTool ? getToolLabel(activeTool) : "No tool";
         const pixelText = ` | Pixel: ${hitInfo.skinPixel.x}, ${hitInfo.skinPixel.y}`;
@@ -334,21 +332,29 @@ function selectModelChoice(choice) {
 
 async function loadSkinInto3DViewer(skinDataUrl, modelChoice, options = {}) {
     const preserveView = options.preserveView ?? false;
+
     if (!skinViewer) {
         updateViewerStatus("3D viewer is not available.", false);
         return;
     }
 
-    if (!skinDataUrl) {
-        updateViewerStatus("No skin data available for the 3D viewer.", false);
+    if (!activeSkinDataUrl || !skinTextureCanvas.width || !skinTextureCanvas.height) {
+        updateViewerStatus("No skin texture is available for the 3D viewer.", false);
         return;
     }
 
     try {
-        await skinViewer.loadSkin(skinDataUrl, {
-            model: modelChoice,
-            preserveView: preserveView
-        });
+        if (typeof skinViewer.loadSkinCanvas === "function") {
+            skinViewer.loadSkinCanvas(skinTextureCanvas, {
+                model: modelChoice,
+                preserveView: preserveView
+            });
+        } else {
+            await skinViewer.loadSkin(skinDataUrl, {
+                model: modelChoice,
+                preserveView: preserveView
+            });
+        }
 
         applyPreferencesToViewer();
         applyLayerVisibilityToViewer();
@@ -660,6 +666,21 @@ function setupEditorTools() {
 }
 
 function selectEditorTool(toolName) {
+    if (toolName === "undo") {
+        undoLastEdit();
+        return;
+    }
+
+    if (toolName === "redo") {
+        redoLastEdit();
+        return;
+    }
+
+    if (activeTool === toolName) {
+        clearActiveTool();
+        return;
+    }
+
     activeTool = toolName;
     updateToolSettingsStatus();
 
@@ -681,12 +702,19 @@ function selectEditorTool(toolName) {
 
     closeToolMenu();
 
-    if (toolName === "undo" || toolName === "redo") {
-        activeToolStatus.textContent = `${getToolLabel(toolName)} is not connected yet.`;
-        return;
-    }
-
     activeToolStatus.textContent = `${getToolLabel(toolName)} selected. Editing logic coming soon.`;
+    updateToolSettingsStatus();
+}
+
+function clearActiveTool() {
+    activeTool = null;
+    closeToolMenu();
+
+    toolButtons.forEach(function (button) {
+        button.classList.remove("active");
+    });
+
+    activeToolStatus.textContent = "No tool selected.";
     updateToolSettingsStatus();
 }
 
@@ -985,8 +1013,8 @@ function setupSkinTextureBuffer() {
     skinTextureContext.imageSmoothingEnabled = false;
 }
 
+
 function paintTexturePixel(x, y, hexColour) {
-    if (!activeSkinDataUrl) return false;
     if (x < 0 || y < 0 || x >= skinTextureCanvas.width || y >= skinTextureCanvas.height) return false;
 
     const rgb = hexToRgb(hexColour);
@@ -995,7 +1023,67 @@ function paintTexturePixel(x, y, hexColour) {
     skinTextureContext.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`;
     skinTextureContext.fillRect(x, y, 1, 1);
 
-    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+    return true;
+}
+
+function eraseTexturePixel(x, y) {
+    if (x < 0 || y < 0 || x >= skinTextureCanvas.width || y >= skinTextureCanvas.height) return false;
+
+    skinTextureContext.clearRect(x, y, 1, 1);
+    return true;
+}
+
+function paintBrushAtPixel(centerX, centerY, hexColour) {
+    const size = Math.max(1, Number(editorSettings.brushSize) || 1);
+    const before = Math.floor((size - 1) / 2);
+    const after = size - before - 1;
+
+    let changed = false;
+
+    for (let y = centerY - before; y <= centerY + after; y += 1) {
+        for (let x = centerX - before; x <= centerX + after; x += 1) {
+            changed = paintTexturePixel(x, y, hexColour) || changed;
+        }
+    }
+
+    return changed;
+}
+
+function eraseBrushAtPixel(centerX, centerY) {
+    const size = Math.max(1, Number(editorSettings.brushSize) || 1);
+    const before = Math.floor((size - 1) / 2);
+    const after = size - before - 1;
+
+    let changed = false;
+
+    for (let y = centerY - before; y <= centerY + after; y += 1) {
+        for (let x = centerX - before; x <= centerX + after; x += 1) {
+            changed = eraseTexturePixel(x, y) || changed;
+        }
+    }
+
+    return changed;
+}
+
+function pickTexturePixel(x, y) {
+    if (x < 0 || y < 0 || x >= skinTextureCanvas.width || y >= skinTextureCanvas.height) return false;
+
+    const pixel = skinTextureContext.getImageData(x, y, 1, 1).data;
+    const alpha = pixel[3];
+
+    if (alpha === 0) {
+        activeToolStatus.textContent = `Picker | Pixel ${x}, ${y} is transparent.`;
+        return false;
+    }
+
+    const colour = rgbToHex(pixel[0], pixel[1], pixel[2]);
+
+    editorSettings.selectedColour = colour;
+    addRecentColour(colour);
+    syncSelectedColourUI();
+    updateToolSettingsStatus();
+
+    activeToolStatus.textContent = `Picker | Picked ${colour} from pixel ${x}, ${y}`;
     return true;
 }
 
@@ -1013,12 +1101,196 @@ function hexToRgb(hex) {
     };
 }
 
-function refreshSkinViewerFromTextureBuffer() {
-    if (!activeSkinDataUrl) return;
+function isDirectEditTool(toolName) {
+    return toolName === "pencil" || toolName === "eraser" || toolName === "picker";
+}
 
-    loadSkinInto3DViewer(activeSkinDataUrl, viewerPreferences.modelChoice, {
-        preserveView: true
+function isLeftPaintEvent(event) {
+    if (!event) return false;
+
+    if (event.type === "pointerdown") {
+        return event.button === 0;
+    }
+
+    if (event.type === "pointermove") {
+        return (event.buttons & 1) === 1;
+    }
+
+    if (event.type === "click") {
+        return event.button === 0;
+    }
+
+    return true;
+}
+
+function handleModelPaintPointer(hitInfo, eventType) {
+    if (eventType === "up" || eventType === "cancel") {
+        finishEditHistoryStep();
+        isPaintStrokeActive = false;
+        lastPaintedPixelKey = null;
+        return;
+    }
+
+    if (!hitInfo || !hitInfo.skinPixel) return;
+
+    const pixel = hitInfo.skinPixel;
+    const pixelKey = `${pixel.x},${pixel.y}`;
+
+    if (eventType === "down") {
+        isPaintStrokeActive = true;
+        lastPaintedPixelKey = null;
+
+        if (activeTool === "pencil" || activeTool === "eraser") {
+            beginEditHistoryStep();
+        }
+    }
+
+    if (eventType === "move" && !isPaintStrokeActive) return;
+
+    if (activeTool === "picker") {
+        if (eventType === "down") {
+            pickTexturePixel(pixel.x, pixel.y);
+        }
+
+        return;
+    }
+
+    if (pixelKey === lastPaintedPixelKey) return;
+
+    let didEdit = false;
+
+    if (activeTool === "pencil") {
+        didEdit = paintBrushAtPixel(pixel.x, pixel.y, editorSettings.selectedColour);
+
+        if (didEdit) {
+            activeToolStatus.textContent =
+                `Pencil | ${hitInfo.part} ${hitInfo.face} | Pixel ${pixel.x}, ${pixel.y} | ${editorSettings.selectedColour}`;
+        }
+    }
+
+    if (activeTool === "eraser") {
+        didEdit = eraseBrushAtPixel(pixel.x, pixel.y);
+
+        if (didEdit) {
+            activeToolStatus.textContent =
+                `Eraser | ${hitInfo.part} ${hitInfo.face} | Cleared pixel ${pixel.x}, ${pixel.y}`;
+        }
+    }
+
+    if (didEdit) {
+        lastPaintedPixelKey = pixelKey;
+
+        if (skinViewer && typeof skinViewer.markTextureDirty === "function") {
+            skinViewer.markTextureDirty();
+        }
+    }
+}
+
+function beginEditHistoryStep() {
+    if (!activeSkinDataUrl || strokeBeforeDataUrl) return;
+
+    strokeBeforeDataUrl = activeSkinDataUrl;
+}
+
+function finishEditHistoryStep() {
+    if (!strokeBeforeDataUrl) return;
+
+    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+
+    if (strokeBeforeDataUrl !== activeSkinDataUrl) {
+        undoStack.push(strokeBeforeDataUrl);
+
+        if (undoStack.length > maxHistorySteps) {
+            undoStack.shift();
+        }
+
+        redoStack = [];
+    }
+
+    strokeBeforeDataUrl = null;
+}
+
+async function undoLastEdit() {
+    if (!undoStack.length || !activeSkinDataUrl) {
+        activeToolStatus.textContent = "Undo | Nothing to undo.";
+        return;
+    }
+
+    const currentState = skinTextureCanvas.toDataURL("image/png");
+    const previousState = undoStack.pop();
+
+    redoStack.push(currentState);
+
+    await restoreTextureFromDataUrl(previousState);
+
+    activeToolStatus.textContent = "Undo | Reverted last edit.";
+}
+
+async function redoLastEdit() {
+    if (!redoStack.length || !activeSkinDataUrl) {
+        activeToolStatus.textContent = "Redo | Nothing to redo.";
+        return;
+    }
+
+    const currentState = skinTextureCanvas.toDataURL("image/png");
+    const nextState = redoStack.pop();
+
+    undoStack.push(currentState);
+
+    await restoreTextureFromDataUrl(nextState);
+
+    activeToolStatus.textContent = "Redo | Reapplied edit.";
+}
+
+async function restoreTextureFromDataUrl(dataUrl) {
+    const image = await loadImageFromDataUrl(dataUrl);
+
+    skinTextureCanvas.width = image.width;
+    skinTextureCanvas.height = image.height;
+
+    skinTextureContext.imageSmoothingEnabled = false;
+    skinTextureContext.clearRect(0, 0, image.width, image.height);
+    skinTextureContext.drawImage(image, 0, 0);
+
+    activeSkinImageWidth = image.width;
+    activeSkinImageHeight = image.height;
+    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+
+    refreshSkinViewerFromTextureBuffer();
+}
+
+function loadImageFromDataUrl(dataUrl) {
+    return new Promise(function (resolve, reject) {
+        const image = new Image();
+
+        image.onload = function () {
+            resolve(image);
+        };
+
+        image.onerror = reject;
+        image.src = dataUrl;
     });
+}
+
+function scheduleSkinViewerRefresh() {
+    if (viewerRefreshQueued) return;
+
+    viewerRefreshQueued = true;
+
+    window.requestAnimationFrame(function () {
+        viewerRefreshQueued = false;
+        refreshSkinViewerFromTextureBuffer();
+    });
+}
+
+function refreshSkinViewerFromTextureBuffer() {
+    if (!skinTextureCanvas.width || !skinTextureCanvas.height) return;
+
+    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+
+    if (skinViewer && typeof skinViewer.markTextureDirty === "function") {
+        skinViewer.markTextureDirty();
+    }
 }
 
 function resetPreview() {
@@ -1036,6 +1308,13 @@ function resetPreview() {
     activeSkinDataUrl = null;
     activeSkinImageWidth = 0;
     activeSkinImageHeight = 0;
+
+    undoStack = [];
+    redoStack = [];
+    strokeBeforeDataUrl = null;
+    isPaintStrokeActive = false;
+    lastPaintedPixelKey = null;
+    viewerRefreshQueued = false;
 
     skinTextureCanvas.width = 64;
     skinTextureCanvas.height = 64;
