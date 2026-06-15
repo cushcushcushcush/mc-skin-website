@@ -1,6 +1,6 @@
 import { CustomSkinViewer, WalkingAnimation } from "./custom-skin-viewer.js";
 
-console.log("Skin validation, saved preferences, model drawer and custom 3D viewer script loaded");
+console.log("Skin validation, saved preferences, model panel and custom 3D editor loaded");
 
 const upload = document.getElementById("skinUpload");
 const statusText = document.getElementById("uploadStatus");
@@ -78,7 +78,8 @@ let toolMenuStack = [];
 
 let isPaintStrokeActive = false;
 let lastPaintedPixelKey = null;
-let strokeBeforeDataUrl = null;
+let strokeBeforeSnapshot = null;
+let detectedModelChoice = "default";
 let undoStack = [];
 let redoStack = [];
 let viewerRefreshQueued = false;
@@ -164,26 +165,28 @@ function handleSkinUploadFile(file) {
             }
 
             generateSkinPalette(image);
+            loadSkinIntoTextureBuffer(image);
 
             if (isModernSkin) {
                 skinTypeText.textContent = "Modern 64x64";
+                detectedModelChoice = detectModelFromTextureCanvas();
                 showSuccess("Valid 64x64 Minecraft skin loaded.");
             } else {
-                skinTypeText.textContent = "Legacy 64x32";
-                showSuccess("Valid legacy 64x32 Minecraft skin loaded.");
+                skinTypeText.textContent = "Legacy 64x32 → normalized to 64x64";
+                detectedModelChoice = "default";
+                showSuccess("Valid legacy 64x32 Minecraft skin loaded and normalized.");
             }
-
-            loadSkinIntoTextureBuffer(image);
 
             pendingSkinDataUrl = activeSkinDataUrl;
             selectModelChoice(viewerPreferences.modelChoice);
             modelChoiceText.textContent = "Waiting for choice";
 
-            updateViewerStatus("Choose a model type to update the 3D viewer.", true);
+            const detectedLabel = getModelLabel(detectedModelChoice);
+            updateViewerStatus(`Choose a model type to update the 3D viewer. Best guess: ${detectedLabel}.`, true);
 
             const modelLeadText = isModernSkin
-                ? "Looks like a modern 64×64 skin. Your say, though:"
-                : "Looks like a legacy 64×32 skin. Your say, though:";
+                ? `Looks like a modern 64×64 skin. Best guess: ${detectedLabel}. Your say, though:`
+                : "Legacy 64×32 skin normalized to a modern 64×64 texture. Classic is the safest fit, but your say:";
 
             showModelChoiceStep(modelLeadText);
         };
@@ -371,28 +374,29 @@ async function loadSkinInto3DViewer(skinDataUrl, modelChoice, options = {}) {
         return false;
     }
 
+    const resolvedModelChoice = resolveModelChoice(modelChoice);
+
     try {
         if (typeof skinViewer.loadSkinCanvas === "function") {
             skinViewer.loadSkinCanvas(skinTextureCanvas, {
-                model: modelChoice,
+                model: resolvedModelChoice,
                 preserveView: preserveView
             });
         } else {
             await skinViewer.loadSkin(skinDataUrl, {
-                model: modelChoice,
+                model: resolvedModelChoice,
                 preserveView: preserveView
             });
         }
 
         applyPreferencesToViewer();
         applyLayerVisibilityToViewer();
-
-        const detectedModel = getActiveViewerModel();
+        applyGridOverlayToViewer();
 
         if (modelChoice === "auto-detect") {
-            const detectedLabel = detectedModel ? getModelLabel(detectedModel) : "Unknown";
+            const detectedLabel = getModelLabel(resolvedModelChoice);
             modelChoiceText.textContent = `Auto-detect (${detectedLabel})`;
-            updateViewerStatus(`3D skin loaded with auto-detect: ${detectedLabel}.`, true);
+            updateViewerStatus(`3D skin loaded with auto-detect best guess: ${detectedLabel}.`, true);
         } else {
             modelChoiceText.textContent = getModelLabel(modelChoice);
             updateViewerStatus(`3D skin loaded as ${getModelLabel(modelChoice)}.`, true);
@@ -404,6 +408,14 @@ async function loadSkinInto3DViewer(skinDataUrl, modelChoice, options = {}) {
         updateViewerStatus("Could not load this skin into the 3D viewer.", false);
         return false;
     }
+}
+
+function resolveModelChoice(modelChoice) {
+    if (modelChoice === "slim" || modelChoice === "default") {
+        return modelChoice;
+    }
+
+    return detectedModelChoice === "slim" ? "slim" : "default";
 }
 
 function applyPreferencesToViewer() {
@@ -534,6 +546,7 @@ function applyLayerVisibilityToViewer() {
 
     if (typeof skinViewer.setOuterLayerVisible === "function") {
         skinViewer.setOuterLayerVisible(outerLayerVisible);
+        applyGridOverlayToViewer();
         return;
     }
 
@@ -555,6 +568,12 @@ function applyLayerVisibilityToViewer() {
             layer.visible = outerLayerVisible;
         }
     });
+}
+
+function applyGridOverlayToViewer() {
+    if (!skinViewer || typeof skinViewer.setGridOverlayVisible !== "function") return;
+
+    skinViewer.setGridOverlayVisible(Boolean(activeSkinDataUrl));
 }
 
 function updateLayerButton() {
@@ -914,7 +933,7 @@ function setupEditorIntro() {
     }
 
     if (skipIntroBtn) {
-        skipIntroBtn.addEventListener("click", finishIntroWithoutSkin);
+        skipIntroBtn.addEventListener("click", startBlankSkinFlow);
     }
 
     setupIntroUploadDropZone();
@@ -952,9 +971,26 @@ function hideEditorIntro() {
     editorIntro.classList.add("hidden");
 }
 
-function finishIntroWithoutSkin() {
-    hideEditorIntro();
-    revealEditorLayout();
+function startBlankSkinFlow() {
+    resetPreview();
+    createBlankSkinTexture();
+
+    fileNameText.textContent = "Blank skin";
+    fileDimensionsText.textContent = "64x64";
+    skinTypeText.textContent = "Transparent blank 64x64";
+    modelChoiceText.textContent = "Waiting for choice";
+
+    detectedModelChoice = "default";
+    pendingSkinDataUrl = activeSkinDataUrl;
+    selectModelChoice(viewerPreferences.modelChoice);
+
+    editorSettings.skinPalette = [];
+    renderSkinPalette();
+    updateToolSettingsStatus("Transparent blank skin ready.");
+
+    showSuccess("Transparent blank 64x64 skin created.");
+    updateViewerStatus("Choose a model type for the transparent blank skin.", true);
+    showModelChoiceStep("Starting from a transparent blank 64×64 skin. Choose the model shape:");
 }
 
 function showModelChoiceStep(message) {
@@ -1152,12 +1188,16 @@ function loadSkinIntoTextureBuffer(image) {
     activeSkinImageWidth = image.width;
     activeSkinImageHeight = image.height;
 
-    skinTextureCanvas.width = image.width;
-    skinTextureCanvas.height = image.height;
+    skinTextureCanvas.width = 64;
+    skinTextureCanvas.height = 64;
 
     skinTextureContext.imageSmoothingEnabled = false;
-    skinTextureContext.clearRect(0, 0, image.width, image.height);
+    skinTextureContext.clearRect(0, 0, 64, 64);
     skinTextureContext.drawImage(image, 0, 0);
+
+    if (image.width === 64 && image.height === 32) {
+        mirrorLegacyLimbsIntoModernLayout();
+    }
 
     activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
 }
@@ -1166,6 +1206,129 @@ function setupSkinTextureBuffer() {
     skinTextureCanvas.width = 64;
     skinTextureCanvas.height = 64;
     skinTextureContext.imageSmoothingEnabled = false;
+}
+
+function createBlankSkinTexture() {
+    skinTextureCanvas.width = 64;
+    skinTextureCanvas.height = 64;
+    skinTextureContext.imageSmoothingEnabled = false;
+    skinTextureContext.clearRect(0, 0, 64, 64);
+
+    activeSkinImageWidth = 64;
+    activeSkinImageHeight = 64;
+    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+}
+
+function mirrorLegacyLimbsIntoModernLayout() {
+    mirrorLegacyPartToModernLeftPart(getRightLegBaseRects(), getLeftLegBaseRects());
+    mirrorLegacyPartToModernLeftPart(getRightArmBaseRects(), getLeftArmBaseRects());
+}
+
+function mirrorLegacyPartToModernLeftPart(source, destination) {
+    copyRectMirroredX(source.top, destination.top);
+    copyRectMirroredX(source.bottom, destination.bottom);
+    copyRectMirroredX(source.front, destination.front);
+    copyRectMirroredX(source.back, destination.back);
+    copyRectMirroredX(source.left, destination.right);
+    copyRectMirroredX(source.right, destination.left);
+}
+
+function copyRectMirroredX(source, destination) {
+    const snapshot = skinTextureContext.getImageData(source.x, source.y, source.w, source.h);
+    const scratchCanvas = document.createElement("canvas");
+    const scratchContext = scratchCanvas.getContext("2d");
+
+    scratchCanvas.width = source.w;
+    scratchCanvas.height = source.h;
+    scratchContext.imageSmoothingEnabled = false;
+    scratchContext.putImageData(snapshot, 0, 0);
+
+    skinTextureContext.save();
+    skinTextureContext.imageSmoothingEnabled = false;
+    skinTextureContext.translate(destination.x + destination.w, destination.y);
+    skinTextureContext.scale(-1, 1);
+    skinTextureContext.drawImage(scratchCanvas, 0, 0, destination.w, destination.h);
+    skinTextureContext.restore();
+}
+
+function r(x, y, w, h) {
+    return { x, y, w, h };
+}
+
+function getRightLegBaseRects() {
+    return {
+        top: r(4, 16, 4, 4),
+        bottom: r(8, 16, 4, 4),
+        right: r(0, 20, 4, 12),
+        front: r(4, 20, 4, 12),
+        left: r(8, 20, 4, 12),
+        back: r(12, 20, 4, 12)
+    };
+}
+
+function getLeftLegBaseRects() {
+    return {
+        top: r(20, 48, 4, 4),
+        bottom: r(24, 48, 4, 4),
+        right: r(16, 52, 4, 12),
+        front: r(20, 52, 4, 12),
+        left: r(24, 52, 4, 12),
+        back: r(28, 52, 4, 12)
+    };
+}
+
+function getRightArmBaseRects() {
+    return {
+        top: r(44, 16, 4, 4),
+        bottom: r(48, 16, 4, 4),
+        right: r(40, 20, 4, 12),
+        front: r(44, 20, 4, 12),
+        left: r(48, 20, 4, 12),
+        back: r(52, 20, 4, 12)
+    };
+}
+
+function getLeftArmBaseRects() {
+    return {
+        top: r(36, 48, 4, 4),
+        bottom: r(40, 48, 4, 4),
+        right: r(32, 52, 4, 12),
+        front: r(36, 52, 4, 12),
+        left: r(40, 52, 4, 12),
+        back: r(44, 52, 4, 12)
+    };
+}
+
+function detectModelFromTextureCanvas() {
+    const slimEvidenceAreas = [
+        r(50, 16, 2, 4),
+        r(54, 20, 2, 12),
+        r(50, 32, 2, 4),
+        r(54, 36, 2, 12),
+        r(46, 52, 2, 12),
+        r(62, 52, 2, 12)
+    ];
+
+    let checkedPixels = 0;
+    let transparentPixels = 0;
+
+    slimEvidenceAreas.forEach(function (area) {
+        const pixels = skinTextureContext.getImageData(area.x, area.y, area.w, area.h).data;
+
+        for (let index = 3; index < pixels.length; index += 4) {
+            checkedPixels += 1;
+
+            if (pixels[index] === 0) {
+                transparentPixels += 1;
+            }
+        }
+    });
+
+    if (!checkedPixels) return "default";
+
+    const transparencyRatio = transparentPixels / checkedPixels;
+
+    return transparencyRatio >= 0.82 ? "slim" : "default";
 }
 
 
@@ -1342,89 +1505,100 @@ function handleModelPaintPointer(hitInfo, eventType) {
 }
 
 function beginEditHistoryStep() {
-    if (!activeSkinDataUrl || strokeBeforeDataUrl) return;
+    if (!activeSkinDataUrl || strokeBeforeSnapshot) return;
 
-    strokeBeforeDataUrl = activeSkinDataUrl;
+    strokeBeforeSnapshot = captureTextureSnapshot();
 }
 
 function finishEditHistoryStep() {
-    if (!strokeBeforeDataUrl) return;
+    if (!strokeBeforeSnapshot) return;
 
-    activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
+    const currentSnapshot = captureTextureSnapshot();
 
-    if (strokeBeforeDataUrl !== activeSkinDataUrl) {
-        undoStack.push(strokeBeforeDataUrl);
+    if (!textureSnapshotsMatch(strokeBeforeSnapshot, currentSnapshot)) {
+        undoStack.push(strokeBeforeSnapshot);
 
         if (undoStack.length > maxHistorySteps) {
             undoStack.shift();
         }
 
         redoStack = [];
+        activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
     }
 
-    strokeBeforeDataUrl = null;
+    strokeBeforeSnapshot = null;
 }
 
-async function undoLastEdit() {
+function undoLastEdit() {
     if (!undoStack.length || !activeSkinDataUrl) {
         activeToolStatus.textContent = "Undo | Nothing to undo.";
         return;
     }
 
-    const currentState = skinTextureCanvas.toDataURL("image/png");
+    const currentState = captureTextureSnapshot();
     const previousState = undoStack.pop();
 
     redoStack.push(currentState);
 
-    await restoreTextureFromDataUrl(previousState);
+    restoreTextureSnapshot(previousState);
 
     activeToolStatus.textContent = "Undo | Reverted last edit.";
 }
 
-async function redoLastEdit() {
+function redoLastEdit() {
     if (!redoStack.length || !activeSkinDataUrl) {
         activeToolStatus.textContent = "Redo | Nothing to redo.";
         return;
     }
 
-    const currentState = skinTextureCanvas.toDataURL("image/png");
+    const currentState = captureTextureSnapshot();
     const nextState = redoStack.pop();
 
     undoStack.push(currentState);
 
-    await restoreTextureFromDataUrl(nextState);
+    restoreTextureSnapshot(nextState);
 
     activeToolStatus.textContent = "Redo | Reapplied edit.";
 }
 
-async function restoreTextureFromDataUrl(dataUrl) {
-    const image = await loadImageFromDataUrl(dataUrl);
+function captureTextureSnapshot() {
+    return {
+        width: skinTextureCanvas.width,
+        height: skinTextureCanvas.height,
+        imageData: skinTextureContext.getImageData(0, 0, skinTextureCanvas.width, skinTextureCanvas.height)
+    };
+}
 
-    skinTextureCanvas.width = image.width;
-    skinTextureCanvas.height = image.height;
-
+function restoreTextureSnapshot(snapshot) {
+    skinTextureCanvas.width = snapshot.width;
+    skinTextureCanvas.height = snapshot.height;
     skinTextureContext.imageSmoothingEnabled = false;
-    skinTextureContext.clearRect(0, 0, image.width, image.height);
-    skinTextureContext.drawImage(image, 0, 0);
+    skinTextureContext.clearRect(0, 0, snapshot.width, snapshot.height);
+    skinTextureContext.putImageData(snapshot.imageData, 0, 0);
 
-    activeSkinImageWidth = image.width;
-    activeSkinImageHeight = image.height;
+    activeSkinImageWidth = snapshot.width;
+    activeSkinImageHeight = snapshot.height;
     activeSkinDataUrl = skinTextureCanvas.toDataURL("image/png");
 
     refreshSkinViewerFromTextureBuffer();
 }
 
-function loadImageFromDataUrl(dataUrl) {
-    return new Promise(function (resolve, reject) {
-        const image = new Image();
+function textureSnapshotsMatch(first, second) {
+    if (!first || !second) return false;
+    if (first.width !== second.width || first.height !== second.height) return false;
 
-        image.onload = function () {
-            resolve(image);
-        };
+    const firstData = first.imageData.data;
+    const secondData = second.imageData.data;
 
-        image.onerror = reject;
-        image.src = dataUrl;
-    });
+    if (firstData.length !== secondData.length) return false;
+
+    for (let index = 0; index < firstData.length; index += 1) {
+        if (firstData[index] !== secondData[index]) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function scheduleSkinViewerRefresh() {
@@ -1448,6 +1622,7 @@ function refreshSkinViewerFromTextureBuffer() {
     }
 }
 
+
 function resetPreview() {
     fileNameText.textContent = "None";
     fileDimensionsText.textContent = "None";
@@ -1466,10 +1641,12 @@ function resetPreview() {
 
     undoStack = [];
     redoStack = [];
-    strokeBeforeDataUrl = null;
+    strokeBeforeSnapshot = null;
     isPaintStrokeActive = false;
     lastPaintedPixelKey = null;
     viewerRefreshQueued = false;
+    detectedModelChoice = "default";
+    applyGridOverlayToViewer();
 
     skinTextureCanvas.width = 64;
     skinTextureCanvas.height = 64;

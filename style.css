@@ -436,10 +436,12 @@ nav a:hover {
     gap: 16px;
     height: 100%;
     align-items: stretch;
+    overflow: visible;
 }
 
 .editor-left-rail {
     position: relative;
+    z-index: 40;
     width: 54px;
     min-height: 0;
     height: 100%;
@@ -496,6 +498,8 @@ nav a:hover {
 }
 
 .editor-stage {
+    position: relative;
+    z-index: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -609,14 +613,16 @@ nav a:hover {
     position: absolute;
     left: calc(100% + 12px);
     top: 64px;
-    z-index: 30;
+    z-index: 200;
     width: 300px;
     max-height: 0;
     overflow: hidden;
     margin: 0;
-    background: var(--panel);
+    background: rgba(16, 17, 22, 0.97);
     border: 1px solid transparent;
     border-radius: var(--radius-large);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(10px);
     opacity: 0;
     transform: translateY(-8px);
     transition:

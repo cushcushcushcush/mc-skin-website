@@ -2,6 +2,8 @@ import * as THREE from "https://esm.sh/three@0.160.1";
 import { OrbitControls } from "https://esm.sh/three@0.160.1/examples/jsm/controls/OrbitControls.js";
 
 const SKIN_SIZE = 64;
+const GRID_TEXTURE_SCALE = 8;
+const GRID_SURFACE_OFFSET = 0.035;
 
 export class WalkingAnimation {
     constructor() {
@@ -20,6 +22,8 @@ export class CustomSkinViewer {
         this.autoRotate = true;
         this.animation = new WalkingAnimation();
         this.playerObject = { skin: { modelType: this.modelType } };
+        this.gridOverlayEnabled = false;
+        this.gridObjects = [];
 
         this.pointer = new THREE.Vector2();
         this.raycaster = new THREE.Raycaster();
@@ -52,6 +56,15 @@ export class CustomSkinViewer {
 
         this.skinTexture = new THREE.CanvasTexture(this.skinCanvas);
         this.configureSkinTexture();
+
+        this.gridCanvas = document.createElement("canvas");
+        this.gridCanvas.width = SKIN_SIZE * GRID_TEXTURE_SCALE;
+        this.gridCanvas.height = SKIN_SIZE * GRID_TEXTURE_SCALE;
+        this.gridContext = this.gridCanvas.getContext("2d", { willReadFrequently: true });
+        this.gridContext.imageSmoothingEnabled = false;
+
+        this.gridTexture = new THREE.CanvasTexture(this.gridCanvas);
+        this.configureGridTexture();
 
         this.skinMaterial = new THREE.MeshBasicMaterial({
             map: this.skinTexture,
@@ -108,6 +121,18 @@ export class CustomSkinViewer {
         this.root.add(this.baseGroup);
         this.root.add(this.outerGroup);
 
+        this.gridMaterial = new THREE.MeshBasicMaterial({
+            map: this.gridTexture,
+            transparent: true,
+            opacity: 0.58,
+            alphaTest: 0.001,
+            depthTest: true,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1
+        });
+
         const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
         this.scene.add(ambientLight);
 
@@ -132,6 +157,14 @@ export class CustomSkinViewer {
         this.skinTexture.generateMipmaps = false;
         this.skinTexture.colorSpace = THREE.SRGBColorSpace;
         this.skinTexture.needsUpdate = true;
+    }
+
+    configureGridTexture() {
+        this.gridTexture.magFilter = THREE.NearestFilter;
+        this.gridTexture.minFilter = THREE.NearestFilter;
+        this.gridTexture.generateMipmaps = false;
+        this.gridTexture.colorSpace = THREE.SRGBColorSpace;
+        this.gridTexture.needsUpdate = true;
     }
 
     set background(value) {
@@ -161,6 +194,7 @@ export class CustomSkinViewer {
 
         this.skinTexture.image = this.skinCanvas;
         this.skinTexture.needsUpdate = true;
+        this.refreshGridOverlayTexture();
 
         this.loadCurrentTextureIntoModel({ model, preserveView });
     }
@@ -169,6 +203,7 @@ export class CustomSkinViewer {
         this.skinCanvas = sourceCanvas;
         this.skinTexture.image = sourceCanvas;
         this.skinTexture.needsUpdate = true;
+        this.refreshGridOverlayTexture();
 
         this.loadCurrentTextureIntoModel({ model, preserveView });
     }
@@ -187,6 +222,50 @@ export class CustomSkinViewer {
 
     markTextureDirty() {
         this.skinTexture.needsUpdate = true;
+        this.refreshGridOverlayTexture();
+    }
+
+    refreshGridOverlayTexture() {
+        if (!this.skinCanvas || !this.gridContext) return;
+
+        this.gridCanvas.width = SKIN_SIZE * GRID_TEXTURE_SCALE;
+        this.gridCanvas.height = SKIN_SIZE * GRID_TEXTURE_SCALE;
+        this.gridContext.imageSmoothingEnabled = false;
+        this.gridContext.clearRect(0, 0, this.gridCanvas.width, this.gridCanvas.height);
+
+        const readCanvas = document.createElement("canvas");
+        const readContext = readCanvas.getContext("2d", { willReadFrequently: true });
+
+        readCanvas.width = SKIN_SIZE;
+        readCanvas.height = SKIN_SIZE;
+        readContext.imageSmoothingEnabled = false;
+        readContext.clearRect(0, 0, SKIN_SIZE, SKIN_SIZE);
+        readContext.drawImage(this.skinCanvas, 0, 0, SKIN_SIZE, SKIN_SIZE);
+
+        const skinPixels = readContext.getImageData(0, 0, SKIN_SIZE, SKIN_SIZE).data;
+        const transparentPixels = [];
+
+        for (let y = 0; y < SKIN_SIZE; y += 1) {
+            transparentPixels[y] = [];
+
+            for (let x = 0; x < SKIN_SIZE; x += 1) {
+                const alphaIndex = ((y * SKIN_SIZE + x) * 4) + 3;
+                transparentPixels[y][x] = skinPixels[alphaIndex] === 0;
+            }
+        }
+
+        for (let y = 0; y < SKIN_SIZE; y += 1) {
+            for (let x = 0; x < SKIN_SIZE; x += 1) {
+                if (!transparentPixels[y][x]) continue;
+
+                const needsRightEdge = x === SKIN_SIZE - 1 || !transparentPixels[y][x + 1];
+                const needsBottomEdge = y === SKIN_SIZE - 1 || !transparentPixels[y + 1][x];
+
+                drawTransparentPixelGrid(this.gridContext, x, y, needsRightEdge, needsBottomEdge);
+            }
+        }
+
+        this.gridTexture.needsUpdate = true;
     }
 
     rebuildPlayerModel() {
@@ -240,7 +319,31 @@ export class CustomSkinViewer {
         const targetGroup = parentGroup || (isOuterLayer ? this.outerGroup : this.baseGroup);
         targetGroup.add(mesh);
 
+        const grid = this.createGridOverlayPart(width, height, depth, faces, position, targetGroup);
+        grid.userData.isOuterLayerGrid = isOuterLayer;
+        this.gridObjects.push(grid);
+
         return mesh;
+    }
+
+    createGridOverlayPart(width, height, depth, faces, position, parentGroup) {
+        const geometry = createUvMappedBoxGeometry(
+            width + GRID_SURFACE_OFFSET * 2,
+            height + GRID_SURFACE_OFFSET * 2,
+            depth + GRID_SURFACE_OFFSET * 2,
+            faces
+        );
+        const grid = new THREE.Mesh(geometry, this.gridMaterial);
+
+        grid.name = "transparentPixelGrid";
+        grid.position.set(position[0], position[1], position[2]);
+        grid.visible = this.gridOverlayEnabled;
+        grid.renderOrder = 10;
+        grid.userData.isGridOverlay = true;
+
+        parentGroup.add(grid);
+
+        return grid;
     }
 
     createPivot(position, parentGroup) {
@@ -252,6 +355,14 @@ export class CustomSkinViewer {
 
     setOuterLayerVisible(visible) {
         this.outerGroup.visible = visible;
+    }
+
+    setGridOverlayVisible(visible) {
+        this.gridOverlayEnabled = visible;
+
+        this.gridObjects.forEach(function (grid) {
+            grid.visible = visible;
+        });
     }
 
     resetCameraPose() {
@@ -465,7 +576,7 @@ export class CustomSkinViewer {
         const clickableMeshes = [];
 
         this.root.traverse(function (child) {
-            if (child.isMesh && isObjectVisibleInTree(child)) {
+            if (child.isMesh && !child.userData.isGridOverlay && isObjectVisibleInTree(child)) {
                 clickableMeshes.push(child);
             }
         });
@@ -536,6 +647,27 @@ export class CustomSkinViewer {
             const child = group.children.pop();
             disposeObjectGeometry(child);
         }
+
+        if (group === this.outerGroup) {
+            this.gridObjects = [];
+        }
+    }
+}
+
+function drawTransparentPixelGrid(context, x, y, drawRightEdge, drawBottomEdge) {
+    const scaledX = x * GRID_TEXTURE_SCALE;
+    const scaledY = y * GRID_TEXTURE_SCALE;
+
+    context.fillStyle = "rgba(0, 0, 0, 0.32)";
+    context.fillRect(scaledX, scaledY, GRID_TEXTURE_SCALE, 1);
+    context.fillRect(scaledX, scaledY, 1, GRID_TEXTURE_SCALE);
+
+    if (drawRightEdge) {
+        context.fillRect(scaledX + GRID_TEXTURE_SCALE - 1, scaledY, 1, GRID_TEXTURE_SCALE);
+    }
+
+    if (drawBottomEdge) {
+        context.fillRect(scaledX, scaledY + GRID_TEXTURE_SCALE - 1, GRID_TEXTURE_SCALE, 1);
     }
 }
 
